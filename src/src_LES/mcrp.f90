@@ -672,7 +672,7 @@ contains
     END IF
 
     IF (sed_snow) THEN
-       CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rhosn,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate,5)
+       CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rhoic,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate,5)
 
        nsnowt(:,:,:,:) = nsnowt(:,:,:,:) + srnt(:,:,:,:)/tstep
        msnowt(:,:,:,:) = msnowt(:,:,:,:) + srvt(:,:,:,:)/tstep
@@ -931,7 +931,7 @@ contains
 
     real, parameter :: A = 1.249 ! fundamentals of atm. modelling pg509
     real, parameter :: B = 0.42
-    real, parameter :: C = 0.87
+    !real, parameter :: C = 0.87
     real, parameter :: M = 4.8096e-26 ! average mass of one air molecule, eq2.3 fundamentals of atm.
                                       ! modelling [kg molec-1]
 
@@ -950,7 +950,11 @@ contains
     REAL :: prnumc, pmass(n4)  ! Instantaneous source number and mass
     INTEGER :: kf, ni,fi
     LOGICAL :: prcdep  ! Deposition flag
-
+    
+    REAL, PARAMETER :: bc = 1./3.
+    REAL, PARAMETER :: bv = 0.5
+    REAL :: C
+    REAL :: D
     remprc(:,:,:) = 0.
     rate(:,:,:) = 0.
     prnt(:,:,:,:) = 0.
@@ -966,10 +970,10 @@ contains
           DO k=n1-1,2,-1
 
              ! atm modelling Eq.4.54
-             avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*(tk(k,i,j)/296.16)**1.5
-             kvis = avis/adn(k,i,j) !actual density ???
-             va = sqrt(8.*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
-             lambda = 2.*avis/(adn(k,i,j)*va) !mean free path
+!              avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*(tk(k,i,j)/296.16)**1.5
+!              kvis = avis/adn(k,i,j) !actual density ???
+!              va = sqrt(8.*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
+!              lambda = 2.*avis/(adn(k,i,j)*va) !mean free path
 
              ! Precipitation bin loop
              DO bin = 1,nn
@@ -979,13 +983,17 @@ contains
                 !   n4 = number of active species
                 !   bin = size bin
                 pmass(:)=mass(k,i,j,bin:(n4-1)*nn+bin:nn)
-                rwet=calc_eff_radius(n4,numc(k,i,j,bin),pmass,flag)
+                !rwet=calc_eff_radius(n4,numc(k,i,j,bin),pmass,flag)
 
                 ! Terminal velocity
-                Kn = lambda/rwet
-                GG = 1.+ Kn*(A+B*exp(-C/Kn))
-                vc = terminal_vel(rwet,pdn,adn(k,i,j),avis,GG,flag)
+                !Kn = lambda/rwet
+                !GG = 1.+ Kn*(A+B*exp(-C/Kn))
+                !vc = terminal_vel(rwet,pdn,adn(k,i,j),avis,GG,flag)
+                C = 0.09*sum(mass(k,i,j, bin:(n4-1)*nn + bin:nn ))**bc
+                D = pi*C
 
+                ! Terminal velocity
+                vc = 12.*D**bv
                 ! Rain rate statistics: removal of water from the current bin is accounted for
                 ! Water is the last (n4) species and rain rate is given here kg/s/m^2
                 rate(k,i,j)=rate(k,i,j)+mass(k,i,j,(n4-1)*nn+bin)*adn(k,i,j)*vc

@@ -1706,19 +1706,18 @@ CONTAINS
           zcwsurfsd(:) = 0.
           DO cc = 1,nsnw
              IF (psnow(ii,jj,cc)%numc > prlim .AND. lscndh2oic) THEN
-                ! Dimension
-                CALL CalcDimension(1,psnow(ii,jj,cc),prlim,dw,5)
-                dwet=dw(1)
+                ! Capacitance (m) as defined for ISDAC
+                cap = 0.09*( SUM(psnow(ii,jj,cc)%volc(:))/psnow(ii,jj,cc)%numc*rhoic )**(1./3.)
 
-                ! Capacitance (analogous to the liquid radius for spherical particles) - edit when needed
-                cap=0.5*dwet
+                ! Maximum particle dimension ~ dwet (ISDAC)
+                dwet=pi*cap
 
                 ! Activity + Kelvin effect
                 !   Can be calculated just like for sperical homogenous particle or just ignored,
                 !   because these are not known for solid, irregular and non-homogenous particles.
                 !   Especially snow is typically highly irregular (e.g. dendrite).
                 zact = 1.0 ! Note: acth2o does not work for ice or snow!
-                zkelvinsd(cc) = exp( 4.*surfi0*mwa / (rg*ptemp(ii,jj)*rhowa*dwet) )
+                zkelvinsd(cc) = 1.0 !exp( 4.*surfi0*mwa / (rg*ptemp(ii,jj)*rhowa*dwet) )
 
                 ! Saturation mole concentrations over flat surface
                 zcwsurfsd(cc) = prsi(ii,jj)*rhoair/mwa

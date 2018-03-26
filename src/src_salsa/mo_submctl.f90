@@ -243,7 +243,7 @@ MODULE mo_submctl
    rhodu = 2650.,         & ! mineral dust
    rhowa = 1000.,         & ! water
    rhoic = 44.2*6/3.1415927,          & ! ice 917.
-   rhosn = 300.,          & ! snow
+   rhosn = 44.2*6/3.1415927,          & ! snow
                                !
                                ! volume of molecule [kg/#]
    mvsu = msu/avog/rhosu,    & ! sulphate

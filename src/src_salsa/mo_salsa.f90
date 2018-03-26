@@ -127,7 +127,7 @@ CONTAINS
     IF (lsicenucl .AND. fixinc>=0.) THEN
         ! Fixed ice number concentration
         CALL  ice_fixed_NC(kproma, kbdim, klev,   &
-                             pcloud,   pice,   &
+                             pcloud,   psnow,   &
                              ptemp,  ppres,  prv,  prsi)
     ELSEIF (lsicenucl .AND. (ice_hom .OR. ice_imm .OR. ice_dep)) THEN
         ! Modelled ice nucleation
