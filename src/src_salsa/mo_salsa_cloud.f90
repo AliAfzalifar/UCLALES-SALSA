@@ -1298,7 +1298,7 @@ CONTAINS
 
     USE mo_submctl, ONLY : t_section,   &
                                ncld,        &
-                               nice,        &
+                               nsnw,        &
                                rhowa,       &
                                rhoic,       &
                                rda,         &
@@ -1314,12 +1314,13 @@ CONTAINS
                             prv(kbdim,klev),    &
                             prsi(kbdim,klev)
     TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), &
-                                      psnow(kbdim,klev,nice)
+                                      psnow(kbdim,klev,nsnw)
 
-    INTEGER :: ii,jj,kk,ss
+    INTEGER :: ii,jj,kk,ss, nn
+    LOGICAL :: looppaa
 
     REAL :: pdn, iceSupSat, rc_tot, Ni0,  &
-            sumICE, iceTendecyNumber, liqToIceFrac
+            sumICE, iceTendecyNumber, liqToIceFrac, sumLIQ, liqToIceFracVOL
 
 
     DO ii = 1,kbdim
@@ -1337,28 +1338,43 @@ CONTAINS
 
         ! current ice number concentration (#/m^3)
         sumICE    = sum(   psnow(ii,jj,:)%numc )
-
-        if ( sumICE > Ni0 ) cycle
-
-        DO kk = nice,1,-1 ! Assuming nice=ncld
-            IF( sumICE < Ni0 .AND. pcloud(ii,jj,kk)%numc > nlim) THEN
-
-                iceTendecyNumber = max( 0.0, min( Ni0 - psnow(ii,jj,kk)%numc , pcloud(ii,jj,kk)%numc )  )
-
-                psnow(ii,jj,kk)%numc   = psnow(ii,jj,kk)%numc   + iceTendecyNumber
-                sumICE = sumICE + iceTendecyNumber
-
-                liqToIceFrac   = MAX( 0.0, MIN( 1.0, iceTendecyNumber/pcloud(ii,jj,kk)%numc ) )
+        
+        ! current cloud number concentration (#/m^3)
+        sumLIQ    = sum(   pcloud(ii,jj,:)%numc )
+        nn = 0
+        looppaa = ( sumICE < Ni0 )
+        DO WHILE ( looppaa )
+        
+            liqToIceFrac = (Ni0 - sumICE)/sumLIQ
+            
+            DO kk = 1,ncld
+                IF (pcloud(ii,jj,kk)%numc < nlim ) cycle
+                
+                iceTendecyNumber =   + max( 0.0, min( 1.0, liqToIceFrac))*pcloud(ii,jj,kk)%numc
+                psnow(ii,jj,1)%numc   = psnow(ii,jj,1)%numc   + iceTendecyNumber
                 pcloud(ii,jj,kk)%numc = pcloud(ii,jj,kk)%numc - iceTendecyNumber
-
+                
+                
+                
+                liqToIceFracVOL   = MAX( 0.0, MIN( 1.0, iceTendecyNumber/pcloud(ii,jj,kk)%numc ) )
+                pcloud(ii,jj,kk)%numc = pcloud(ii,jj,kk)%numc - iceTendecyNumber
+ 
                 DO ss = 1,7
-                    psnow(ii,jj,kk)%volc(ss) = psnow(ii,jj,kk)%volc(ss) + max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFrac )
-                    pcloud(ii,jj,kk)%volc(ss) = pcloud(ii,jj,kk)%volc(ss) - max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFrac )
+                    psnow(ii,jj,1)%volc(ss) = psnow(ii,jj,1)%volc(ss) + max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFracVOL )
+                    pcloud(ii,jj,kk)%volc(ss) = pcloud(ii,jj,kk)%volc(ss) - max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFracVOL )
                 END DO
                 ss=8 ! Water
-                psnow(ii,jj,kk)%volc(ss) = psnow(ii,jj,kk)%volc(ss) + max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFrac*rhowa/rhoic )
-                pcloud(ii,jj,kk)%volc(ss) = pcloud(ii,jj,kk)%volc(ss) - max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFrac )
-            END IF
+                psnow(ii,jj,1)%volc(ss) = psnow(ii,jj,1)%volc(ss) + max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFracVOL*rhowa/rhoic )
+                pcloud(ii,jj,kk)%volc(ss) = pcloud(ii,jj,kk)%volc(ss) - max(0., pcloud(ii,jj,kk)%volc(ss)*liqToIceFracVOL )
+            END DO
+            
+            sumICE    = sum(   psnow(ii,jj,:)%numc )
+            nn = nn + 1
+            looppaa = (sumICE < Ni0 )
+	    IF (looppaa .and. nn > 10000) THEN
+		looppaa = .FALSE.
+		WRITE(*,*) 'ice_fixed_nc nn over 10000'
+	    ENDIF
         END DO
     END DO
     END DO

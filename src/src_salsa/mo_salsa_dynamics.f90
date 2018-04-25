@@ -1005,7 +1005,7 @@ CONTAINS
                           pcsa,                               &
                           pcocnv,  pcocsv, pchno3, pcnh3,     &
                           prv,prs, prsi,ptemp,  ppres,  ptstep,    &
-                          ppbl,    prtcl)
+                          ppbl,    prtcl, pdn)
 
     USE mo_salsa_nucleation
 
@@ -1034,7 +1034,8 @@ CONTAINS
          ppres(kbdim,klev),         & ! ambient pressure [Pa]
          ptstep,                    & ! timestep [s]
          prs(kbdim,klev),           & ! Water vapor saturation mixing ratio [kg/kg]
-         prsi(kbdim,klev)             ! Water vapor saturation mixing ratio over ice [kg/kg]
+         prsi(kbdim,klev),          & ! Water vapor saturation mixing ratio over ice [kg/kg]
+         pdn(kbdim,klev)
 
     TYPE(ComponentIndex), INTENT(in) :: prtcl  ! Keeps track which substances are used
 
@@ -1088,7 +1089,7 @@ CONTAINS
                    paero, pcloud, pprecp,   &
                    pice, psnow,             &
                    ptemp,ppres,prs,prsi,prv,     &
-                   ptstep)
+                   ptstep, pdn,prtcl)
 
     ! HNO3/NH3 - currently disabled
     !CALL gpparthno3(kproma,kbdim,klev,krow,ppres,ptemp,paero,pcloud,   &
@@ -1483,7 +1484,7 @@ CONTAINS
                        paero,  pcloud, pprecp,      &
                        pice, psnow,                 &
                        ptemp,  ppres,  prs,prsi, prv,    &
-                       ptstep)
+                       ptstep,pdn,prtcl)
     
     USE mo_submctl, ONLY : t_section,            &
                                nbins, ncld, nprc,    &
@@ -1495,13 +1496,14 @@ CONTAINS
                                in1a,in2a,  &
                                fn2b,            &
                                lscndh2oae, lscndh2ocl, lscndh2oic, &
-                               alv, als, CalcDimension
+                               CalcDimension, rhosu, rhooc, rhobc, rhodu, rhoss, rhono, rhonh
     USE mo_salsa_properties, ONLY : equilibration
+    USE class_componentIndex, ONLY : ComponentIndex,IsUsed
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: kproma,kbdim,klev,krow
     REAL, INTENT(in) :: ptstep
-    REAL, INTENT(in) :: ptemp(kbdim,klev), ppres(kbdim,klev), prs(kbdim,klev), prsi(kbdim,klev)
+    REAL, INTENT(in) :: ptemp(kbdim,klev), ppres(kbdim,klev), prs(kbdim,klev), prsi(kbdim,klev), pdn(kbdim,klev)
     TYPE(t_section), INTENT(inout) :: paero(kbdim,klev,nbins),  &
                                       pcloud(kbdim,klev,ncld),  &
                                       pprecp(kbdim,klev,nprc),  &
@@ -1509,7 +1511,8 @@ CONTAINS
                                       psnow(kbdim,klev,nsnw)      ! ice'n'snow
 
     REAL, INTENT(inout) :: prv(kbdim,klev)
-
+    TYPE(ComponentIndex), INTENT(in) :: prtcl  ! Keeps track which substances are used
+    
     REAL :: zkelvin(nbins), zkelvincd(ncld), zkelvinpd(nprc), &  ! Kelvin effects
                 zkelvinid(nice), zkelvinsd(nsnw)                      ! Kelvin effects ice'n'snow
     REAL :: zcwsurfae(nbins), zcwsurfcd(ncld), zcwsurfpd(nprc), & ! Surface mole concentrations
@@ -1532,10 +1535,10 @@ CONTAINS
     REAL :: dwet, dw(1), cap
     REAL :: zrh(kbdim,klev)
 
-    REAL :: zaelwc1(kbdim,klev), zaelwc2(kbdim,klev)
-
+    REAL :: zaelwc1(kbdim,klev), zaelwc2(kbdim,klev), massa
+    REAL :: als(kbdim,klev), alv(kbdim, klev)
     INTEGER :: nstr
-    INTEGER :: ii,jj,cc
+    INTEGER :: ii,jj,cc, dd
     LOGICAL aero_eq, any_aero, any_cloud, any_prec, any_ice, any_snow
 
     zrh(:,:) = prv(:,:)/prs(:,:)
@@ -1560,7 +1563,14 @@ CONTAINS
     zcwcae = 0.; zcwccd = 0.; zcwcpd = 0.; zcwcid = 0.; zcwcsd = 0.;
     zcwintae = 0.; zcwintcd = 0.; zcwintpd = 0.; zcwintid = 0.; zcwintsd = 0.
     zwsatae = 0.; zwsatcd = 0.; zwsatpd = 0.; zwsatid = 0.; zwsatsd = 0.
-
+    
+    DO jj = 1, klev
+        DO ii = 1,kbdim
+             als(ii,jj) = calc_als( ptemp(ii,jj) )
+             alv(ii,jj) = calc_alv( ptemp(ii,jj) )
+        END DO
+    END DO
+    
     DO jj = 1,klev
        DO ii = 1,kbdim
 
@@ -1613,8 +1623,8 @@ CONTAINS
 
                 ! Mass transfer according to Jacobson
                 zhlp1 = pcloud(ii,jj,cc)%numc*2.*pi*dwet*zdfh2o*zbeta
-                zhlp2 = mwa*zdfh2o*alv*zwsatcd(cc)*zcwsurfcd(cc)/(zthcond*ptemp(ii,jj))
-                zhlp3 = ( (alv*mwa)/(rg*ptemp(ii,jj)) ) - 1.
+                zhlp2 = mwa*zdfh2o*alv(ii,jj)*zwsatcd(cc)*zcwsurfcd(cc)/(zthcond*ptemp(ii,jj))
+                zhlp3 = ( (alv(ii,jj)*mwa)/(rg*ptemp(ii,jj)) ) - 1.
 
                 zmtcd(cc) = zhlp1/( zhlp2*zhlp3 + 1. )
 
@@ -1646,8 +1656,8 @@ CONTAINS
 
                 ! Mass transfer according to Jacobson
                 zhlp1 = pprecp(ii,jj,cc)%numc*2.*pi*dwet*zdfh2o*zbeta
-                zhlp2 = mwa*zdfh2o*alv*zwsatpd(cc)*zcwsurfpd(cc)/(zthcond*ptemp(ii,jj))
-                zhlp3 = ( (alv*mwa)/(rg*ptemp(ii,jj)) ) - 1.
+                zhlp2 = mwa*zdfh2o*alv(ii,jj)*zwsatpd(cc)*zcwsurfpd(cc)/(zthcond*ptemp(ii,jj))
+                zhlp3 = ( (alv(ii,jj)*mwa)/(rg*ptemp(ii,jj)) ) - 1.
 
                 zmtpd(cc) = zhlp1/( zhlp2*zhlp3 + 1. )
 
@@ -1659,9 +1669,41 @@ CONTAINS
           zcwsurfid(:) = 0.
           DO cc = 1,nice
              IF (pice(ii,jj,cc)%numc > prlim .AND. lscndh2oic) THEN
-
-                ! Capacitance (m) as defined for ISDAC
-                cap = 0.09*( SUM(pice(ii,jj,cc)%volc(:))/pice(ii,jj,cc)%numc*rhoic )**(1./3.)
+                massa = 0.
+                if(IsUsed(prtcl,'SO4')) THEN
+                    dd = 1
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhosu
+                endif
+                if(IsUsed(prtcl,'OC')) THEN
+                    dd = 2
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhooc
+                endif
+                if(IsUsed(prtcl,'BC')) THEN
+                    dd = 3
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhobc
+                endif
+                if(IsUsed(prtcl,'DU')) THEN
+                    dd = 4
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhodu
+                endif
+                if(IsUsed(prtcl,'SS')) THEN
+                    dd = 5
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhoss
+                endif
+                if(IsUsed(prtcl,'NO')) THEN
+                    dd = 6
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhosu
+                endif
+                if(IsUsed(prtcl,'NH')) THEN
+                    dd = 7
+                    massa = massa +pice(ii,jj,cc)%volc(dd)*rhosu
+                endif
+                
+                massa = massa + pice(ii,jj,cc)%volc(8)*rhoic
+                massa = massa/pice(ii,jj,cc)%numc/pdn(ii,jj) ! massa per kappale
+                
+                cap = 0.09*massa**(1./3.) ! Capacitance (m) as defined for ISDAC
+            
 
                 ! Maximum particle dimension ~ dwet (ISDAC)
                 dwet=pi*cap
@@ -1693,8 +1735,8 @@ CONTAINS
 
                 ! Mass transfer according to Jacobson
                 zhlp1 = pice(ii,jj,cc)%numc*4.*pi*cap*zdfh2o*zbeta
-                zhlp2 = mwa*zdfh2o*als*zwsatid(cc)*zcwsurfid(cc)/(zthcond*ptemp(ii,jj))
-                zhlp3 = ( (als*mwa)/(rg*ptemp(ii,jj)) ) - 1.
+                zhlp2 = mwa*zdfh2o*als(ii,jj)*zwsatid(cc)*zcwsurfid(cc)/(zthcond*ptemp(ii,jj))
+                zhlp3 = ( (als(ii,jj)*mwa)/(rg*ptemp(ii,jj)) ) - 1.
 
                 zmtid(cc) = zhlp1/( zhlp2*zhlp3 + 1. )
 
@@ -1706,8 +1748,41 @@ CONTAINS
           zcwsurfsd(:) = 0.
           DO cc = 1,nsnw
              IF (psnow(ii,jj,cc)%numc > prlim .AND. lscndh2oic) THEN
-                ! Capacitance (m) as defined for ISDAC
-                cap = 0.09*( SUM(psnow(ii,jj,cc)%volc(:))/psnow(ii,jj,cc)%numc*rhoic )**(1./3.)
+                massa = 0.
+                if(IsUsed(prtcl,'SO4')) THEN
+                    dd = 1
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhosu
+                endif
+                if(IsUsed(prtcl,'OC')) THEN
+                    dd = 2
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhooc
+                endif
+                if(IsUsed(prtcl,'BC')) THEN
+                    dd = 3
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhobc
+                endif
+                if(IsUsed(prtcl,'DU')) THEN
+                    dd = 4
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhodu
+                endif
+                if(IsUsed(prtcl,'SS')) THEN
+                    dd = 5
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhoss
+                endif
+                if(IsUsed(prtcl,'NO')) THEN
+                    dd = 6
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhosu
+                endif
+                if(IsUsed(prtcl,'NH')) THEN
+                    dd = 7
+                    massa = massa +psnow(ii,jj,cc)%volc(dd)*rhosu
+                endif
+                
+                massa = massa + psnow(ii,jj,cc)%volc(8)*rhoic
+                massa = massa/psnow(ii,jj,cc)%numc/pdn(ii,jj) ! massa per kappale
+                
+                cap = 0.09*massa**(1./3.) ! Capacitance (m) as defined for ISDAC
+            
 
                 ! Maximum particle dimension ~ dwet (ISDAC)
                 dwet=pi*cap
@@ -1732,8 +1807,8 @@ CONTAINS
 
                 ! Mass transfer according to Jacobson
                 zhlp1 = psnow(ii,jj,cc)%numc*4.*pi*cap*zdfh2o*zbeta
-                zhlp2 = mwa*zdfh2o*als*zwsatsd(cc)*zcwsurfsd(cc)/(zthcond*ptemp(ii,jj))
-                zhlp3 = ( (als*mwa)/(rg*ptemp(ii,jj)) ) - 1.
+                zhlp2 = mwa*zdfh2o*als(ii,jj)*zwsatsd(cc)*zcwsurfsd(cc)/(zthcond*ptemp(ii,jj))
+                zhlp3 = ( (als(ii,jj)*mwa)/(rg*ptemp(ii,jj)) ) - 1.
 
                 zmtsd(cc) = zhlp1/( zhlp2*zhlp3 + 1. )
 
@@ -1767,8 +1842,8 @@ CONTAINS
 
                 ! Mass transfer
                 zhlp1 = paero(ii,jj,cc)%numc*2.*pi*dwet*zdfh2o*zbeta
-                zhlp2 = mwa*zdfh2o*alv*zwsatae(cc)*zcwsurfae(cc)/(zthcond*ptemp(ii,jj))
-                zhlp3 = ( (alv*mwa)/(rg*ptemp(ii,jj)) ) - 1.
+                zhlp2 = mwa*zdfh2o*alv(ii,jj)*zwsatae(cc)*zcwsurfae(cc)/(zthcond*ptemp(ii,jj))
+                zhlp3 = ( (alv(ii,jj)*mwa)/(rg*ptemp(ii,jj)) ) - 1.
 
                 zmtae(cc) = zhlp1/( zhlp2*zhlp3 + 1. )
 
@@ -2690,6 +2765,27 @@ CONTAINS
     END SELECT
 
   END FUNCTION coagc
+  
+  REAL FUNCTION calc_alv(temp)
+    IMPLICIT NONE
+    REAL, INTENT(IN) :: temp ! ambient temperature [K]
+    
+    
+    calc_alv = 2.501e6-2370.*(temp-273.15)
+    
+    
+  END FUNCTION calc_alv
+  
+  REAL FUNCTION calc_als(temp)
+    IMPLICIT NONE
+    REAL, INTENT(IN) :: temp ! ambient temperature [K]
+    REAL :: tempC
+    tempC= (temp-273.15)
+    
+    calc_als = 2.83458e6-tempC*(340.+10.46*tempC)
+    
+    
+  END FUNCTION calc_als
 
 
 

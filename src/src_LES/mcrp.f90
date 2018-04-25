@@ -186,7 +186,7 @@ contains
                 Dp = ( Xp / prw )**(1./3.)
 
                 G = 1. / (1. / (dn0(k)*rs(k,i,j)*Dv) + &
-                     alvl*(alvl/(Rm*tk(k,i,j))-1.) / (Kt*tk(k,i,j)))
+                     calc_alvl(tk(k,i,j))*(calc_alvl(tk(k,i,j))/(Rm*tk(k,i,j))-1.) / (Kt*tk(k,i,j)))
                 S = rv(k,i,j)/rs(k,i,j) - 1.
 
                 if (S < 0) then
@@ -435,11 +435,11 @@ contains
               flxdiv = (rfl(kp1)-rfl(k))*dzt(k)/dn0(k)
               rpt(k,i,j) =rpt(k,i,j)-flxdiv
               rtt(k,i,j) =rtt(k,i,j)-flxdiv
-              tlt(k,i,j) =tlt(k,i,j)+flxdiv*(alvl/cp)*th(k,i,j)/tk(k,i,j)
+              tlt(k,i,j) =tlt(k,i,j)+flxdiv*(calc_alvl(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
 
               npt(k,i,j) = npt(k,i,j)-(nfl(kp1)-nfl(k))*dzt(k)/dn0(k)
 
-              rrate(k,i,j)    = -rfl(k)/dn0(k) * alvl*0.5*(dn0(k)+dn0(kp1))
+              rrate(k,i,j)    = -rfl(k)/dn0(k) * calc_alvl(tk(k,i,j))*0.5*(dn0(k)+dn0(kp1))
 
            end do
         end do
@@ -482,7 +482,7 @@ contains
              kp1=k+1
              flxdiv = (rfl(kp1)-rfl(k))*dzt(k)
              rtt(k,i,j) = rtt(k,i,j)-flxdiv
-             tlt(k,i,j) = tlt(k,i,j)+flxdiv*(alvl/cp)*th(k,i,j)/tk(k,i,j)
+             tlt(k,i,j) = tlt(k,i,j)+flxdiv*(calc_alvl(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
              rrate(k,i,j) = -rfl(k)
           end do
        end do
@@ -594,7 +594,7 @@ contains
        DO j = 3,n3-2
           DO i = 3,n2-2
              DO k = 2,n1
-                tlt(k,i,j) = tlt(k,i,j) + SUM(amdiv(k,i,j,istr:iend))*(alvl/cp)*th(k,i,j)/tk(k,i,j)
+                tlt(k,i,j) = tlt(k,i,j) + SUM(amdiv(k,i,j,istr:iend))*(calc_alvl(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
@@ -615,7 +615,7 @@ contains
        DO j = 3,n3-2
           DO i = 3,n2-2
              DO k = 2,n1
-                tlt(k,i,j) = tlt(k,i,j) + SUM(cmdiv(k,i,j,istr:iend))*(alvl/cp)*th(k,i,j)/tk(k,i,j)
+                tlt(k,i,j) = tlt(k,i,j) + SUM(cmdiv(k,i,j,istr:iend))*(calc_alvl(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
@@ -640,7 +640,7 @@ contains
        DO j = 3,n3-2
           DO i = 3,n2-2
              DO k = 2,n1
-                tlt(k,i,j) = tlt(k,i,j) + SUM(imdiv(k,i,j,istr:iend))*(alvi/cp)*th(k,i,j)/tk(k,i,j)
+                tlt(k,i,j) = tlt(k,i,j) + SUM(imdiv(k,i,j,istr:iend))*(calc_alvi(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
@@ -665,31 +665,47 @@ contains
        DO j = 3,n3-2
           DO i = 3,n2-2
              DO k = 1,n1-1
-                tlt(k,i,j) = tlt(k,i,j) - SUM(prvt(k,i,j,istr:iend))/tstep*(alvl/cp)*th(k,i,j)/tk(k,i,j)
+                tlt(k,i,j) = tlt(k,i,j) - SUM(prvt(k,i,j,istr:iend))/tstep*(calc_alvl(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
     END IF
 
     IF (sed_snow) THEN
-       CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rhoic,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate,5)
+        CALL DepositionISDAC(n1,n2,n3,n4,nsnw,tk,a_dn,rhoic,nsnowp,msnowp,dzt,prlim,indiv,imdiv, indep, remsnw)
+       nsnowt = nsnowt - indiv 
+       msnowt = msnowt - imdiv 
 
-       nsnowt(:,:,:,:) = nsnowt(:,:,:,:) + srnt(:,:,:,:)/tstep
-       msnowt(:,:,:,:) = msnowt(:,:,:,:) + srvt(:,:,:,:)/tstep
-
-       ! Convert mass flux to heat flux (W/m^2)
-       srate(:,:,:)=srate(:,:,:)*alvi
-
+       ! Account for changes in liquid water pot temperature
        nc = GetIndex(prtcl,'H2O')
-       istr = (nc-1)*nsnw + 1
-       iend = nc*nsnw
+       istr = (nc-1)*nice+1
+       iend = nc*nice
        DO j = 3,n3-2
           DO i = 3,n2-2
-             DO k = 1,n1-1
-                tlt(k,i,j) = tlt(k,i,j) - SUM(srvt(k,i,j,istr:iend))/tstep*(alvi/cp)*th(k,i,j)/tk(k,i,j)
+             DO k = 2,n1
+                tlt(k,i,j) = tlt(k,i,j) + SUM(imdiv(k,i,j,istr:iend))*(calc_alvi(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
+
+!        CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rhoic,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate,5)
+! 
+!        nsnowt(:,:,:,:) = nsnowt(:,:,:,:) + srnt(:,:,:,:)/tstep
+!        msnowt(:,:,:,:) = msnowt(:,:,:,:) + srvt(:,:,:,:)/tstep
+! 
+!        ! Convert mass flux to heat flux (W/m^2)
+!        srate(:,:,:)=srate(:,:,:)*alvi
+! 
+!        nc = GetIndex(prtcl,'H2O')
+!        istr = (nc-1)*nsnw + 1
+!        iend = nc*nsnw
+!        DO j = 3,n3-2
+!           DO i = 3,n2-2
+!              DO k = 1,n1-1
+!                 tlt(k,i,j) = tlt(k,i,j) - SUM(srvt(k,i,j,istr:iend))/tstep*(calc_alvi(tk(k,i,j))/cp)*th(k,i,j)/tk(k,i,j)
+!              END DO
+!           END DO
+!        END DO
     END IF
 
     IF (mcflg) THEN
@@ -877,11 +893,11 @@ contains
                 IF (numc(k,i,j,bin)*adn(k,i,j)<clim) CYCLE
 
 
-                C = 0.09*sum(mass(k,i,j, bin:(n4-1)*nn + bin:nn ))**bc
+                C = 0.09*sum(mass(k,i,j,bin:(n4-1)*nn+bin:nn))**bc
                 D = pi*C
 
                 ! Terminal velocity
-                vc = 12.*D**bv
+                vc = 12.*D**bv !12.0*sqrt(2.0*radius)
 
 
                 ! Flux for the particle mass
@@ -931,7 +947,6 @@ contains
 
     real, parameter :: A = 1.249 ! fundamentals of atm. modelling pg509
     real, parameter :: B = 0.42
-    !real, parameter :: C = 0.87
     real, parameter :: M = 4.8096e-26 ! average mass of one air molecule, eq2.3 fundamentals of atm.
                                       ! modelling [kg molec-1]
 
@@ -969,11 +984,6 @@ contains
 
           DO k=n1-1,2,-1
 
-             ! atm modelling Eq.4.54
-!              avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*(tk(k,i,j)/296.16)**1.5
-!              kvis = avis/adn(k,i,j) !actual density ???
-!              va = sqrt(8.*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
-!              lambda = 2.*avis/(adn(k,i,j)*va) !mean free path
 
              ! Precipitation bin loop
              DO bin = 1,nn
@@ -983,13 +993,10 @@ contains
                 !   n4 = number of active species
                 !   bin = size bin
                 pmass(:)=mass(k,i,j,bin:(n4-1)*nn+bin:nn)
-                !rwet=calc_eff_radius(n4,numc(k,i,j,bin),pmass,flag)
 
-                ! Terminal velocity
-                !Kn = lambda/rwet
-                !GG = 1.+ Kn*(A+B*exp(-C/Kn))
-                !vc = terminal_vel(rwet,pdn,adn(k,i,j),avis,GG,flag)
-                C = 0.09*sum(mass(k,i,j, bin:(n4-1)*nn + bin:nn ))**bc
+
+
+                C = 0.09*sum(mass(k,i,j,bin:(n4-1)*nn+bin:nn))**bc
                 D = pi*C
 
                 ! Terminal velocity
@@ -1073,5 +1080,25 @@ contains
 
   END SUBROUTINE DepositionFast
 
+  REAL FUNCTION calc_alvl(temp) ! latent heat of vaporization
+    IMPLICIT NONE
+    REAL, INTENT(IN) :: temp ! ambient temperature [K]
+    
+    
+    calc_alvl = 2.501e6-2370.*(temp-273.15)
+    
+    
+  END FUNCTION calc_alvl
+  
+  REAL FUNCTION calc_alvi(temp) ! latent heat of sublimation
+    IMPLICIT NONE
+    REAL, INTENT(IN) :: temp ! ambient temperature [K]
+    REAL :: tempC
+    tempC= (temp-273.15)
+    
+    calc_alvi = 2.83458e6-tempC*(340.+10.46*tempC)
+    
+    
+  END FUNCTION calc_alvi
 
 end module mcrp

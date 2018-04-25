@@ -293,6 +293,7 @@ def piirra_aikasarjasettii( muuttuja, variKartta = plt.cm.gist_rainbow, variRefV
                 muunnosKerroin = 2.5e+06
             
             print 'variable is', muuttuja, 'muunnosKerroin', muunnosKerroin
+            print ' '
             
 
             
@@ -790,6 +791,7 @@ def piirra_profiiliKehitys(  muuttuja, variKartta = plt.cm.gist_rainbow, colorBa
                 muuttuja = apumuuttuja
         
             print 'variable is', muuttuja
+            print ' '
     
     
 
@@ -1053,6 +1055,7 @@ def piirra_maksimiKeissit( muuttuja, muunnosKerroin = 1.0, longName = 'pitka nim
                 muunnosKerroin = 2.5e+06
             
             print 'variable is', muuttuja, 'muunnosKerroin', muunnosKerroin
+            print ' '
                 
         muuttuja_Tdata  = mdp.read_Data( filenameTS[i], muuttuja )*muunnosKerroin
         time_data       = mdp.read_Data( filenameNC[i], 'time'   )
@@ -1115,7 +1118,7 @@ def piirra_binijakauma( muuttuja, muunnosKerroin = 1.0, longName = None, savePre
         
 
 #######################
-def piirra_domainProfiili( muuttuja, muunnosKerroin = 1.0, transpose = False, longName = None , savePrefix = None, useDN = False, colorBarTickValues = None, colorBarTickNames = None, xlabels = None, ylabels = None, xticks = None, yticks = None, variKartta = plt.cm.Blues, profiili = False, radCool = False, cloudBaseTop = False, spinup = None, testi = False, sliceXbeg = None, sliceXend = None, sliceYbeg = None, sliceYend = None ):
+def piirra_domainProfiili( muuttuja, muunnosKerroin = 1.0, transpose = False, longName = None , savePrefix = None, useDN = False, colorBarTickValues = None, colorBarTickNames = None, xlabels = None, ylabels = None, xticks = None, yticks = None, variKartta = plt.cm.Blues, profiili = False, radCool = False, cloudBaseTop = False, spinup = None, testi = False, sliceXbeg = None, sliceXend = None, sliceYbeg = None, sliceYend = None, askChangeOfVariable = False ):
     
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     from matplotlib import colors
@@ -1147,6 +1150,15 @@ def piirra_domainProfiili( muuttuja, muunnosKerroin = 1.0, transpose = False, lo
         sliceXbeg = sliceXend
 
     for i in xrange(len(arguments)-1):
+        if askChangeOfVariable:
+            printti = "Case is "+ arguments[i+1] + ", the variable is currently: " + muuttuja + ' if you want to keep it press [Enter], otherwise give the name of the variable (e.g. prcp/rmH2Opr Nc_ic/CCN): '
+            apumuuttuja = raw_input(printti)
+            
+            if apumuuttuja != '':
+                muuttuja = apumuuttuja
+            print 'variable is', muuttuja
+            print ' '
+            
         if EMUL:
             if not EMULCASES:
                 case_indeksi = int(filenameNC[i].split("/")[-2][-2:])-1
@@ -1193,7 +1205,7 @@ def piirra_domainProfiili( muuttuja, muunnosKerroin = 1.0, transpose = False, lo
             mini = np.min(muuttuja_meanProfile)
         
         
-        print 'muuttuja', muuttuja, 'mini', mini, 'maxi', maxi
+        #print 'muuttuja', muuttuja, 'mini', mini, 'maxi', maxi
         if radCool:
             for pp in xrange(np.shape(muuttuja_meanProfile)[0]):
                 for rr in xrange(1, np.shape(muuttuja_meanProfile)[1]):
@@ -1383,7 +1395,7 @@ def piirra_domainProfiili( muuttuja, muunnosKerroin = 1.0, transpose = False, lo
             #mdp.plottaa( aika, base )
             
 ###################################################################
-def piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', muunnosKerroinR = 2.e3, korkeusH = None, aikaT = None, xlabel = 'Diameter [mm]', ylabel='#', asetaRajat = True, xmax = None, ymax = None, savePrefix = None, legenda = True, interplo = True, sekoita = True, xCustSize = None, yCustSize = None ):
+def piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', muunnosKerroinR = 2.e3, korkeusH = None, aikaT = None, xlabel = 'Diameter [mm]', ylabel='#', asetaRajat = True, xmax = None, ymax = None, savePrefix = None, legenda = True, interplo = True, sekoita = True, xCustSize = None, yCustSize = None, askChangeOfVariable = False ):
     from scipy.interpolate import interp1d
     import numpy as np
     import matplotlib.pyplot as plt
@@ -1396,10 +1408,36 @@ def piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 
         korkeusH = int(raw_input("Anna z [m]: "))
     if aikaT is None:
         aikaT = int(raw_input("Anna t [h]: "))
-        
+    
+    
+    
+    LKM = len(arguments)-1
+    #fig , ax = mdp.plot_alustus(a=24,b=15*LKM, sub_i = 1, sub_j = LKM, )
+    #uusifig = True
+    figuuri = None
     for i in xrange(len(arguments)-1):
+        
         uusikuva = True
         
+        if askChangeOfVariable:
+            printti = "Case is "+ arguments[i+1] + ", the variable is currently: " + muuttujaR + ' if you want to keep it press [Enter], otherwise give the name of the variable (e.g. prcp/rmH2Opr Nc_ic/CCN): '
+            apumuuttujaR = raw_input(printti)
+            
+            if apumuuttujaR != '':
+                muuttujaR = apumuuttujaR
+            print 'variable is', muuttujaR
+            print ' '
+            
+            printti = "Case is "+ arguments[i+1] + ", the variable is currently: " + muuttujaN + ' if you want to keep it press [Enter], otherwise give the name of the variable (e.g. prcp/rmH2Opr Nc_ic/CCN): '
+            apumuuttujaN = raw_input(printti)
+            
+            if apumuuttujaN != '':
+                muuttujaN = apumuuttujaN
+            print 'variable is', muuttujaN
+            print ' '
+            
+            
+            
         if EMUL:
             if not EMULCASES:
                 case_indeksi = int(filenameNC[i].split("/")[-2][-2:])-1
@@ -1461,8 +1499,8 @@ def piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 
         
         label = labelArray[i]
         
-        tit = typename + ' size distribution, slize t = ' + str(time_data[t]/3600.) + ' [h], h = ' + str(zt_data[z]) + ' [m] ' + label
-        
+        #tit = typename + ' size distribution, slize t = ' + str(round(time_data[t]/3600.,1)) + ' [h], h = ' + str(zt_data[z]) + ' [m] ' + label
+        tit ='slize t = ' + str(round(time_data[t]/3600.,1)) + ' [h], h = ' + str(zt_data[z]) + ' [m] ' + label
         if xCustSize is None:
             xlist = range(xsize)
         else:
@@ -1480,14 +1518,42 @@ def piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 
         print 'kokojakauma x ja y indeksit', xlist, ylist    
         mdp.initializeColors(len(xlist)*len(ylist), shuffling = sekoita)
         
-        
-        
+        oikeatXtikit = np.arange( 0, xmax+0.01,  0.2)
         for x in xlist:
             for y in ylist:
-                fig , ax = mdp.plottaa(Diameter_data[:,y,x], Number_data[:,y,x],xl=xlabel, yl=ylabel, tit = tit, uusikuva = uusikuva, scatter = True, LEGEND = False, tightXAxis = True, tightYAxis = True, gridi = False)
-                uusikuva = False
+                if figuuri is None:
+                    uusifig = True
+                else:
+                    uusifig = False
+                    ylabel = ' '
+                
+                fig, ax =  mdp.plottaa(Diameter_data[:,y,x], Number_data[:,y,x],xl=xlabel, yl=ylabel, tit = ' ', uusikuva = uusikuva, scatter = True, LEGEND = False, tightXAxis = True, tightYAxis = True, gridi = False, sub_i = 1, sub_j = LKM, sub_k = i+1, figuuri = None, uusisub = True, uusifig = uusifig )
+                
+                figuuri = fig
+                ax.title.set_text(tit)
+                ax.title.set_fontsize(22)
+                
+                
+                ax.set_xticklabels( map(str, oikeatXtikit ))
+                ax.set_xticks( oikeatXtikit )
+                
+                j = 0
+                for xxlabel in ax.xaxis.get_ticklabels():
+                    if np.mod(j-1,4) != 0 or j == 0:
+                    #if j==0:
+                        xxlabel.set_visible(False)
+                    j+=1
+                xxlabel.set_visible(True)
+                if i > 0:
+                    for yylabel in ax.yaxis.get_ticklabels():
+                        yylabel.set_visible(False)
+                    
+                
         if interplo:
-            mdp.plottaa(xnew, y_2,xl=xlabel, yl=ylabel, tit = tit, uusikuva = uusikuva, omavari='k', LEGEND = False)
+            mdp.plottaa(xnew, y_2,xl=xlabel, yl=ylabel, tit = ' ', uusikuva = uusikuva, omavari='k', LEGEND = False, sub_i = 1, sub_j = LKM, sub_k = i+1)
+        
+        figuuri.suptitle( typename + ' size distribution') #, fontsize=45
+
         
         # jos ymin ja ymax arvoja ei ole ennalta annettu, niin kaytetaan kuvan raja-arvoina laskettuja arvoja
         if ymax is None:
@@ -1500,26 +1566,20 @@ def piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 
             plt.ylim( 0., 1.1*ymax )
             plt.xlim( 0., xmax )
         
-        oikeatXtikit = np.arange( 0, xmax+0.01,  0.2)
-        
-        ax.set_xticklabels( map(str, oikeatXtikit ))
-        ax.set_xticks( oikeatXtikit )
-        
-        j = 0
-        for label in ax.xaxis.get_ticklabels():
-            #if np.mod(j,4) != 0:
-            if j==0:
-                label.set_visible(False)
-            j+=1
-            
         
         
-            
-        if savePrefix is None:  
-            savePrefix = typename + '_size_distribution_'+str(time_data[t]/3600.) + 'h_' + str(zt_data[z]) + 'm'
 
-        if saveFig:
-            plt.savefig( picturefolder + savePrefix + '_' + saveTag + LVLprintSave + '.png')
+        
+        
+            
+        
+        
+            
+    if savePrefix is None:  
+        savePrefix = typename+ '_size_distribution'
+
+    if saveFig:
+        plt.savefig( picturefolder + savePrefix  + '_' + saveTag+ '_'+ str(round(time_data[t]/3600.,1)) + 'h_' + str(zt_data[z]) + 'm' + LVLprintSave + '.png')
 
 
    
@@ -1686,7 +1746,7 @@ def piirra_MeanSize( tyyppi = 'ice', bini='a', ajanhetket = [0], korkeus = [0], 
         #plt.savefig( picturefolder + savePrefix+ '_' + saveTag + LVLprintSave + '.png')
 
 #############################        
-def piirra_domainMeanProfiili( muuttuja, muuttujaPainotus =  'S_Niba', muuttujaPainotusPotenssi =  'S_Rwiba', nimi = None, muunnosKerroin = 1.0, ajanhetket = [0], useDN = True, profiili = False, binidata = False, xAxisL = '', color = 'k', savePrefix = None, akselit = False, xmax = None   ):
+def piirra_domainMeanProfiili( muuttuja, muuttujaPainotus =  'S_Niba', muuttujaPainotusPotenssi =  'S_Rwiba', nimi = None, muunnosKerroin = 1.0, ajanhetket = [0], useDN = True, profiili = False, binidata = False, xAxisL = '', color = 'k', savePrefix = None, akselit = False, xmax = None, askChangeOfVariable = False   ):
         
     minimi  = None
     maksimi = None
@@ -1701,6 +1761,28 @@ def piirra_domainMeanProfiili( muuttuja, muuttujaPainotus =  'S_Niba', muuttujaP
     
     for i in xrange(len(arguments)-1):
         uusikuva = True if i == 0 else  False
+        if askChangeOfVariable:
+            printti = "Case is "+ arguments[i+1] + ", the variable is currently: " + muuttuja + ' if you want to keep it press [Enter], otherwise give the name of the variable (e.g. prcp/rmH2Opr Nc_ic/CCN): '
+            apumuuttuja = raw_input(printti)
+            if apumuuttuja != '':
+                muuttuja = apumuuttuja
+            print 'variable is', muuttuja
+            print ' '
+            
+            printti = "Case is "+ arguments[i+1] + ", the muuttujaPainotus is currently: " + muuttujaPainotus + ' if you want to keep it press [Enter], otherwise give the name of the variable (e.g. prcp/rmH2Opr Nc_ic/CCN): '
+            muuttujaPainotusApu = raw_input(printti)
+            if muuttujaPainotusApu != '':
+                muuttujaPainotus = muuttujaPainotusApu
+            print 'muuttujaPainotus is', muuttujaPainotus
+            print ' '
+            
+            printti = "Case is "+ arguments[i+1] + ", the muuttujaPainotus is currently: " + muuttujaPainotusPotenssi + ' if you want to keep it press [Enter], otherwise give the name of the variable (e.g. prcp/rmH2Opr Nc_ic/CCN): '
+            muuttujaPainotusPotenssiApu = raw_input(printti)
+            if muuttujaPainotusPotenssiApu != '':
+                muuttujaPainotusPotenssi = muuttujaPainotusPotenssiApu
+            print 'muuttujaPainotus is', muuttujaPainotusPotenssi
+            print ' '
+                
         data  = np.multiply( mdp.read_Data( tiedostonimi[i], muuttuja), muunnosKerroin )
         zt    = np.asmatrix( mdp.read_Data( tiedostonimi[i], 'zt') )
         
@@ -2282,7 +2364,7 @@ if EMUL:
 if ICE:
     
 
-    naytaPlotit = True
+    naytaPlotit = False
     korkeustikit =np.arange(0, 1250, 50)
     ylabels    = map(str, korkeustikit )
     
@@ -2309,7 +2391,7 @@ if ICE:
     cbvalDiamStr = map(str,cbvalDiam)
     
     diamVari = profiiliVariICE #[plt.cm.tab20(3),plt.cm.tab20(2),plt.cm.tab20c(1), plt.cm.tab20c(0),plt.cm.tab20c(7),plt.cm.tab20c(6),plt.cm.tab20c(5),plt.cm.tab20c(4),plt.cm.tab20c(11),plt.cm.tab20c(10),plt.cm.tab20c(9),plt.cm.tab20c(8) ]
-    
+    askChangeOfVariable = raw_input( "Snow stuff included? (yes/no) Then will ask askChangeOfVariable " ) in kylla
     if len(arguments)-1>1:
         icevari = False
     
@@ -2321,6 +2403,9 @@ if ICE:
         #plt.xticks( ticksHours, xLabelsHours )
         
         piirra_aikasarjasettii( muuttuja = 'lwp_bar', muunnosKerroin = 1000.0, longName = 'Liquid water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'lwpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
         #mdp.plot_vertical( spinup )
         #plt.xticks( ticksHours, xLabelsHours )
         
@@ -2334,6 +2419,7 @@ if ICE:
         
         piirra_domainProfiili( 'P_rl', muunnosKerroin = 1000., longName = "Liquid water mixing ratio  " + r'$g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalLIQ, colorBarTickNames = cbvalLIQStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit,  variKartta = profiiliVariLIQ, spinup = spinup, profiili = True ) # variKartta = profiiliVariLIQ
         
+        mdp.plot_suljetus(naytaPlotit)
         
         
         #animoi_path( 'l', muunnosKerroin = 1000., longName = "Liquid water path  " + r'$g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalLIQPATH, colorBarTickNames = cbvalLIQPATHStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit,  variKartta = plt.cm.Reds, spinup = spinup )
@@ -2347,6 +2433,7 @@ if ICE:
         
         piirra_domainMeanProfiili( 'P_Nca',nimi = 'Cloud number concentration averaged',  muunnosKerroin=1.e-6, ajanhetket = [6,8], useDN = True, profiili = True, xAxisL = r'[#$/cm^{3}$]', color = icevari )
         
+        mdp.plot_suljetus(naytaPlotit)
         
         
         
@@ -2360,29 +2447,39 @@ if ICE:
         
         piirra_aikasarjasettii( muuttuja = 'Nc_ic', muunnosKerroin = 1.e-6, longName = 'in-cloud CDNC', ylabel = '[#/mg]', ymin = 0.0,  savePrefix = 'cdncTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
         
+        mdp.plot_suljetus(naytaPlotit)
+        
         #piirra_domainProfiili( 'theta', longName = 'Potential temperature', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Reds, spinup = spinup, profiili = True  )
 
         #piirra_domainProfiili( 'thl', longName = 'Liquid water potential temperature', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Reds, spinup = spinup, profiili = True  )
         
-        piirra_aikasarjasettii( muuttuja = 'vtke', muunnosKerroin = 1.0, longName = 'Vertical integral of total TKE', ylabel = '[kg/s]', ymin = 0.0,  savePrefix = 'vtkeTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
+        #piirra_aikasarjasettii( muuttuja = 'vtke', muunnosKerroin = 1.0, longName = 'Vertical integral of total TKE', ylabel = '[kg/s]', ymin = 0.0,  savePrefix = 'vtkeTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
         
-    if int(lvl)>= 5:
+        mdp.plot_suljetus(naytaPlotit)
+        
+    if int(lvl)== 5:
         #piirra_aikasarjaPathXYZ( 'i', longName = 'Ice Water Path', savePrefix = 'iwp', xaxislabel = 'time [h]',xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel )
         #mdp.plot_vertical( spinup )
         #plt.xticks( ticksHours, xLabelsHours )
         
-        piirra_aikasarjasettii( muuttuja = 'iwp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'iwpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
-        piirra_aikasarjasettii( muuttuja = 'swp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'iwpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
+        piirra_aikasarjasettii( muuttuja = 'iwp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'iwpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True, askChangeOfVariable = askChangeOfVariable  )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        #piirra_aikasarjasettii( muuttuja = 'swp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'swpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
 
         #piirra_domainProfiili( 'i', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalICE, colorBarTickNames = cbvalICEStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup  )
         
-        piirra_domainProfiili( 'P_ri', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalICE, colorBarTickNames = cbvalICEStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup, profiili = True  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE plt.cm.Blues
+        piirra_domainProfiili( 'P_ri', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalICE, colorBarTickNames = cbvalICEStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup, profiili = True, askChangeOfVariable = askChangeOfVariable  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE plt.cm.Blues
+        
+        mdp.plot_suljetus(naytaPlotit)
         
         #piirra_domainProfiili( 'P_ri', muunnosKerroin = 1000.*np.power(10.,4), longName = 'Ice mixing ratio ' + r'$10^{4}g/kg^{-1}$', useDN = False, transpose = True, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Blues, spinup = spinup, profiili = True  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE plt.cm.Blues
         
         nic = np.arange(0, nicLKM, 0.2)
-        piirra_domainProfiili( 'P_Nia', muunnosKerroin = 1.e-3, longName = 'Ice number concentration ', useDN = False, transpose = True, colorBarTickValues = nic, colorBarTickNames = map(str,nic), xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup, profiili = True  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE 
+        piirra_domainProfiili( 'P_Nia', muunnosKerroin = 1.e-3, longName = 'Ice number concentration ', useDN = False, transpose = True, colorBarTickValues = nic, colorBarTickNames = map(str,nic), xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup, profiili = True, askChangeOfVariable = askChangeOfVariable  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE 
         
+        mdp.plot_suljetus(naytaPlotit)
         #piirra_domainProfiili( 'P_ri', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Blues, spinup = spinup, profiili = True  )
         
         #animoi_path( 'f', muunnosKerroin = 1000., longName = tag + "Ice water path  " + r'$g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalLIQPATH, colorBarTickNames = cbvalLIQPATHStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit,  variKartta = plt.cm.Blues, spinup = spinup )
@@ -2395,23 +2492,96 @@ if ICE:
         ##piirra_domainMeanProfiili( 'S_Ni',   nimi = 'Ice number concentration averaged',   muunnosKerroin=1./1000., ajanhetket = [3,6], useDN = True, profiili = False, xAxisL = r'$N [L^{-1}]$', color = icevari )
         #piirra_domainMeanProfiili( 'S_Rwia', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = True, profiili = False, xAxisL = r'$D [{\mu}m]$', color = icevari )   
 
-        piirra_domainMeanProfiili( 'P_Nia',  nimi = 'Ice number concentration averaged',   muunnosKerroin=1./1000., ajanhetket = [6,8], useDN = True, profiili = True, xAxisL = r'[#$/L$]', color = icevari )
+        piirra_domainMeanProfiili( 'P_Nia',  nimi = 'Ice number concentration averaged',   muunnosKerroin=1./1000., ajanhetket = [6,8], useDN = True, profiili = True, xAxisL = r'[#$/L$]', color = icevari, askChangeOfVariable = askChangeOfVariable )
         
-        piirra_domainMeanProfiili( 'P_Rwia', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[${\mu}m$]', color = icevari )   
+        mdp.plot_suljetus(naytaPlotit)
         
-        piirra_domainMeanProfiili( 'S_Rwiba', nimi = 'Ice particle mass mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMassMeanProfiili_salsa' )
+        piirra_domainMeanProfiili( 'P_Rwia', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[${\mu}m$]', color = icevari, askChangeOfVariable = askChangeOfVariable )   
         
+        mdp.plot_suljetus(naytaPlotit)
+        
+        piirra_domainMeanProfiili( 'S_Rwiba', nimi = 'Ice particle mass mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMassMeanProfiili_salsa', askChangeOfVariable = askChangeOfVariable )
+        
+        mdp.plot_suljetus(naytaPlotit)
         #piirra_domainMeanProfiili( 'S_Rwiba', nimi = 'Ice particle mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMeanProfiili_salsa' )
 
-        piirra_domainMeanProfiili( 'P_ri',  nimi = 'Ice mixing ratio averaged',   muunnosKerroin=1000., ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[g/kg]', color = icevari )
+        piirra_domainMeanProfiili( 'P_ri',  nimi = 'Ice mixing ratio averaged',   muunnosKerroin=1000., ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[g/kg]', color = icevari, askChangeOfVariable = askChangeOfVariable )
         
-        piirra_domainProfiili( 'P_Rwia', muunnosKerroin = 2.e6, longName = 'Ice particle mean diameter '+r'[${\mu}m$]', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, spinup = spinup, profiili = True, colorBarTickValues = cbvalDiam, colorBarTickNames = cbvalDiamStr, variKartta = diamVari  )
+        mdp.plot_suljetus(naytaPlotit)
         
+        piirra_domainProfiili( 'P_Rwia', muunnosKerroin = 2.e6, longName = 'Ice particle mean diameter '+r'[${\mu}m$]', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, spinup = spinup, profiili = True, colorBarTickValues = cbvalDiam, colorBarTickNames = cbvalDiamStr, variKartta = diamVari, askChangeOfVariable = askChangeOfVariable  )
+        
+        mdp.plot_suljetus(naytaPlotit)
         
         #piirra_domainProfiili( 'thil', longName = 'Ice-Liquid water potential temperature', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Reds, spinup = spinup, profiili = True  )
         
-        piirra_aikasarjasettii( muuttuja = 'rmH2Oic',     muunnosKerroin = 2.5e+06,  longName = 'Removal of water by sedimentation of ice',       ylabel = 'flux ' + r'[$W/m^2$]', ymin = 0.0,  savePrefix = 'depIce', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel  )
-    
+        piirra_aikasarjasettii( muuttuja = 'rmH2Oic',     muunnosKerroin = 2.5e+06,  longName = 'Removal of water by sedimentation of ice',       ylabel = 'flux ' + r'[$W/m^2$]', ymin = 0.0,  savePrefix = 'depIce', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, askChangeOfVariable = askChangeOfVariable  )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+    if int(lvl)== 6:  # plain snow stuff
+        print 'plain snow stuff'
+        #piirra_aikasarjaPathXYZ( 'i', longName = 'Ice Water Path', savePrefix = 'iwp', xaxislabel = 'time [h]',xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel )
+        #mdp.plot_vertical( spinup )
+        #plt.xticks( ticksHours, xLabelsHours )
+        
+        piirra_aikasarjasettii( muuttuja = 'swp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path (snow)', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'swpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True, askChangeOfVariable = askChangeOfVariable  )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        #piirra_aikasarjasettii( muuttuja = 'swp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'swpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
+
+        #piirra_domainProfiili( 'i', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalICE, colorBarTickNames = cbvalICEStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup  )
+        
+        piirra_domainProfiili( 'P_rs', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalICE, colorBarTickNames = cbvalICEStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup, profiili = True, askChangeOfVariable = askChangeOfVariable  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE plt.cm.Blues
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        #piirra_domainProfiili( 'P_ri', muunnosKerroin = 1000.*np.power(10.,4), longName = 'Ice mixing ratio ' + r'$10^{4}g/kg^{-1}$', useDN = False, transpose = True, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Blues, spinup = spinup, profiili = True  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE plt.cm.Blues
+        
+        nic = np.arange(0, nicLKM, 0.2)
+        piirra_domainProfiili( 'P_Ns', muunnosKerroin = 1.e-3, longName = 'Ice number concentration ', useDN = False, transpose = True, colorBarTickValues = nic, colorBarTickNames = map(str,nic), xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = profiiliVariICE, spinup = spinup, profiili = True, askChangeOfVariable = askChangeOfVariable  ) #variKartta = profiiliVariICE, colorBarTickValues = cbvalICE 
+        
+        mdp.plot_suljetus(naytaPlotit)
+        #piirra_domainProfiili( 'P_ri', muunnosKerroin = 1000.*np.power(10.,2), longName = 'Ice mixing ratio ' + r'$10^{2}g/kg^{-1}$', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Blues, spinup = spinup, profiili = True  )
+        
+        #animoi_path( 'f', muunnosKerroin = 1000., longName = tag + "Ice water path  " + r'$g/kg^{-1}$', useDN = False, transpose = True, colorBarTickValues = cbvalLIQPATH, colorBarTickNames = cbvalLIQPATHStr, xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit,  variKartta = plt.cm.Blues, spinup = spinup )
+        ## muuttuja, muunnosKerroin = 1.0, transpose = False, longName = None , savePrefix = None, useDN = False, colorBarTickValues = [0,1], colorBarTickNames = ['0','1'], xlabels = None, ylabels = None, xticks = None, yticks = None
+        
+        #piirra_MeanSize(tyyppi = 'ice', ajanhetket = [6], korkeus = [700] )
+        #piirra_MeanSize(tyyppi = 'ice', ajanhetket = [6], korkeus = [400] )
+        #piirra_MeanSize(tyyppi = 'ice', ajanhetket = [6], korkeus = [200] )
+        #piirra_domainMeanProfiili( 'S_Ni',   nimi = 'Ice number concentration averaged',   muunnosKerroin=1./1000., ajanhetket = [6,8], useDN = True, profiili = False, xAxisL = r'$N [L^{-1}]$', color = icevari )
+        ##piirra_domainMeanProfiili( 'S_Ni',   nimi = 'Ice number concentration averaged',   muunnosKerroin=1./1000., ajanhetket = [3,6], useDN = True, profiili = False, xAxisL = r'$N [L^{-1}]$', color = icevari )
+        #piirra_domainMeanProfiili( 'S_Rwia', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = True, profiili = False, xAxisL = r'$D [{\mu}m]$', color = icevari )   
+
+        piirra_domainMeanProfiili( 'P_Ns',  nimi = 'Ice number concentration averaged',   muunnosKerroin=1./1000., ajanhetket = [6,8], useDN = True, profiili = True, xAxisL = r'[#$/L$]', color = icevari, askChangeOfVariable = askChangeOfVariable )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        piirra_domainMeanProfiili( 'P_Rws', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[${\mu}m$]', color = icevari, askChangeOfVariable = askChangeOfVariable )   
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        piirra_domainMeanProfiili( 'S_Rwsba', muuttujaPainotus = 'S_Nsba', muuttujaPainotusPotenssi =  'S_Rwsba',  nimi = 'Ice particle mass mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMassMeanProfiili_salsa', askChangeOfVariable = askChangeOfVariable )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        #piirra_domainMeanProfiili( 'S_Rwiba', nimi = 'Ice particle mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMeanProfiili_salsa' )
+
+        piirra_domainMeanProfiili( 'P_rs',  nimi = 'Ice mixing ratio averaged',   muunnosKerroin=1000., ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[g/kg]', color = icevari, askChangeOfVariable = askChangeOfVariable )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        piirra_domainProfiili( 'P_Rws', muunnosKerroin = 2.e6, longName = 'Ice particle mean diameter '+r'[${\mu}m$]', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, spinup = spinup, profiili = True, colorBarTickValues = cbvalDiam, colorBarTickNames = cbvalDiamStr, variKartta = diamVari, askChangeOfVariable = askChangeOfVariable  )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
+        #piirra_domainProfiili( 'thil', longName = 'Ice-Liquid water potential temperature', useDN = False, transpose = True,  xlabels = xLabelsHours, ylabels = ylabels, xticks = ticksHours, yticks = korkeustikit, variKartta = plt.cm.Reds, spinup = spinup, profiili = True  )
+        
+        piirra_aikasarjasettii( muuttuja = 'rmH2Osn',     muunnosKerroin = 2.5e+06,  longName = 'Removal of water by sedimentation of ice',       ylabel = 'flux ' + r'[$W/m^2$]', ymin = 0.0,  savePrefix = 'depIce', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, askChangeOfVariable = askChangeOfVariable  )
+        
+        mdp.plot_suljetus(naytaPlotit)
+        
     if int(lvl) == 0:
         piirra_aikasarjavertailusettii( muuttuja = 'lwp',    muunnosKerroin = 1000.0,  savePrefix = 'changeLWP',    omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel  )
         piirra_aikasarjavertailusettii( muuttuja = 'lwpiwp', muunnosKerroin = 1000.0,  savePrefix = 'changeLWPIWP', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel  )
@@ -2435,89 +2605,29 @@ if ICE:
     
     if int(lvl) == -2:
         
-        piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', korkeusH = 700, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False ) # , yCustSize = 2
-        piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', korkeusH = 400, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False ) # , yCustSize = 2
-        piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', korkeusH = 200, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False ) # , yCustSize = 2
-        
-        #from scipy.interpolate import interp1d
-        #import numpy as np
-        #import matplotlib.pyplot as plt
-        #from sklearn.tree import DecisionTreeRegressor
-        #from sklearn.ensemble import AdaBoostRegressor
-        #from random import shuffle
-        #zin = int(raw_input("Anna z [m]: "))
-        #th = int(raw_input("Anna t [h]: "))
+        piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', korkeusH = 700, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False, askChangeOfVariable = askChangeOfVariable ) # , xCustSize = 2
+        piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', korkeusH = 400, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False, askChangeOfVariable = askChangeOfVariable ) # , xCustSize = 2
+        piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Ice', korkeusH = 200, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False, askChangeOfVariable = askChangeOfVariable ) # , xCustSize = 2
 
-        #dn0_data     = mdp.read_Data( filenameNC[0], 'dn0'     )
-        #time_data    = mdp.read_Data( filenameNC[0], 'time'    )
-        #zt_data      = mdp.read_Data( filenameNC[0], 'zt'      )
-        #S_Rwiba_data = mdp.read_Data( filenameNC[0], 'S_Rwiba' )
-        #S_Niba_data  = mdp.read_Data( filenameNC[0], 'S_Niba'  )
-
-        #t =  np.argmin(np.abs(th*3600-time_data))
-        #z =  np.argmin(np.abs(zin-zt_data))
-        
-        #ysize = np.shape(S_Rwiba_data)[2]
-        #xsize = np.shape(S_Rwiba_data)[3]        
-        
-        #S_Rwiba_data = S_Rwiba_data[t,:,:,:,z]* 2.e3
-        #S_Niba_data  = S_Niba_data[t,:,:,:,z]* dn0_data[z]
-        
-        
-        #S_Rwiba_data_flatten = S_Rwiba_data.flatten()
-        #S_Niba_data_flatten  = S_Niba_data.flatten()
-        #print 'koot slize', np.shape(S_Rwiba_data), np.shape(S_Niba_data), xsize, ysize 
-        #jarj = np.argsort(S_Rwiba_data_flatten)
-        #print 'koot fa', np.shape(S_Rwiba_data_flatten), np.shape(S_Niba_data_flatten)
-        #S_Rwiba_data_flatten = np.reshape( np.sort(S_Rwiba_data_flatten) , (-1,1) )
-        #koko =  np.shape(S_Niba_data_flatten)
-        #apu = np.zeros(koko)
-        
-        #for kkk in xrange(koko[0]):
-            #apu[kkk] = S_Niba_data_flatten[ jarj[kkk] ]
-        
-        #S_Niba_data_flatten = np.reshape(apu, (-1,1))
-
-        #xnew = np.linspace(np.min(S_Rwiba_data_flatten),np.max(S_Rwiba_data_flatten), 1000, endpoint = True)[:,np.newaxis]
-        #print 'koot fb', np.shape(S_Rwiba_data_flatten), np.shape(S_Niba_data_flatten), np.shape(xnew)
-        ##finter  = interp1d(S_Rwiba_data_flatten, S_Niba_data_flatten)
-        
-        ### decision tree regression
-        #rng = np.random.RandomState(1)
-        #regr_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),n_estimators=500, random_state=rng)
-        #regr_2.fit(S_Rwiba_data_flatten, S_Niba_data_flatten)
-        #y_2 = regr_2.predict(xnew)
-        
-        #mdp.initializeColors(xsize*ysize, shuffling = True) 
-        ##colorMap = plt.cm.gist_ncar
-        ##colorlist = [colorMap(i) for i in np.linspace(0, 0.95, xsize*ysize)]
-        ##xx = range(xsize)
-        ##yy = range(ysize)
-        ##shuffle(xx)
-        ##shuffle(yy)
-        
-        ##aa = np.zeros((xsize*ysize,2))
-        ##kk=0;
-        ##for i in xrange(xsize):
-            ##for j in xrange(ysize):
-                ##aa[kk] =  [xx[i], yy[j]]
-                ##kk+=1
-        
-        ##np.random.shuffle(aa)
-        
-        #newfig = True
-        #for x in xrange(xsize):
-            #for y in xrange(ysize):
-                #mdp.plottaa(S_Rwiba_data[:,y,x], S_Niba_data[:,y,x], uusikuva = newfig, scatter = True, LEGEND = False, tightXAxis = True, tightYAxis = True)
-                #newfig = False
-        #mdp.plottaa(xnew, y_2, uusikuva = newfig, omavari='k', LEGEND = False)        
     if int(lvl) == -3:
-        piirra_domainMeanProfiili( 'P_Rwia', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[${\mu}m$]', color = icevari, xmax=450 )   
-        
-        
+        piirra_domainMeanProfiili( 'P_Rwia', nimi = 'Ice particle mean diameter averaged', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, profiili = True, xAxisL = r'[${\mu}m$]', color = icevari, xmax=450 )           
         piirra_domainMeanProfiili( 'S_Rwiba', nimi = 'Ice particle mass mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMassMeanProfiili_salsa' )
         
+    if int(lvl) == -4:
         
+        piirra_kokojakauma( muuttujaR = 'S_Rwsba', muuttujaN = 'S_Nsba', typename = 'Snow', korkeusH = 700, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False, askChangeOfVariable = askChangeOfVariable ) # , yCustSize = 2
+        piirra_kokojakauma( muuttujaR = 'S_Rwsba', muuttujaN = 'S_Nsba', typename = 'Snow', korkeusH = 400, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False, askChangeOfVariable = askChangeOfVariable ) # , yCustSize = 2
+        piirra_kokojakauma( muuttujaR = 'S_Rwsba', muuttujaN = 'S_Nsba', typename = 'Snow', korkeusH = 200, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False, askChangeOfVariable = askChangeOfVariable ) # , yCustSize = 2        
+    if int(lvl) == -5:
+        
+        piirra_kokojakauma( muuttujaR = 'S_Rwaba', muuttujaN = 'S_Naba', typename = 'Aero', korkeusH = 1100, aikaT = 6,  yCustSize = 2, sekoita = False, interplo = False ) # , yCustSize = 2
+        #piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Aero', korkeusH = 400, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False ) # , yCustSize = 2
+        #piirra_kokojakauma( muuttujaR = 'S_Rwiba', muuttujaN = 'S_Niba', typename = 'Aero', korkeusH = 200, aikaT = 6, ymax = 11000, xmax = 1.6, yCustSize = 2, sekoita = False, interplo = False ) # , yCustSize = 2
+    if int(lvl) == -6:
+        piirra_aikasarjasettii( muuttuja = 'iwp_bar', muunnosKerroin = 1000.0, longName = 'Ice water path', ylabel = 'path ' + r'[$g/m^2$]', ymin = 0.0,  savePrefix = 'iwpTS', omaVari = False, xlabel = 'time [h]', spinup = spinup, piilotaOsaXlabel = piilotaOsaXlabel, legenda = True  )
+    
+    if int(lvl) == -7:
+        piirra_domainMeanProfiili( 'S_Rwiba', nimi = 'Ice particle mass mean diameter averaged testi', muunnosKerroin=2.e6  ,   ajanhetket = [6,8], useDN = False, binidata = True, xAxisL = r'[${\mu}m$]', color = icevari, savePrefix = 'domainMassMeanProfiili_salsa', askChangeOfVariable = askChangeOfVariable )
 toc = time.clock()
 print toc - tic
 ########################

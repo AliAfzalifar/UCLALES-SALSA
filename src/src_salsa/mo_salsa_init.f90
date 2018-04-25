@@ -323,11 +323,13 @@ CONTAINS
 
     INTEGER :: ii,jj,cc,nba,nbb
 
-    REAL :: tmplolim(7), tmphilim(7)
+    REAL :: tmplolim(20), tmphilim(20)
 
     ! Helper arrays to set up ice size bins
-    tmplolim = (/10.,20.,40., 80.,160.,320., 640./)*1.e-6
-    tmphilim = (/20.,40.,80.,160.,320.,640.,1280./)*1.e-6
+     !tmplolim = (/50.,55.,65., 100.,200.,500., 1000./)*1.e-6
+     !tmphilim = (/55.,65.,100.,200.,500.,1000.,2000./)*1.e-6
+     tmplolim = (/20.0,25.2,31.7,40.0,50.3,63.5,80.0,100.,127.,160.,201.,254.,320.,403.,508.,640.,806.,1001.,1280.,1612./)*1.e-6
+     tmphilim = (/25.2,31.7,40.0,50.3,63.5,80.0,100.,127.,160.,201.,254.,320.,403.,508.,640.,806.,1001.,1280.,1612.,2000./)*1.e-6
 
     ! Number of ice bins in regime a (soluble nuclei)
     nba = fn2a-in2a+1
@@ -344,7 +346,7 @@ CONTAINS
     nice = fib%cur
 
     ! snow bins
-    isa = 1; fsa = 7;
+    isa = 1; fsa = 20;
     nsnw = fsa
 
     ! ----------------------------------------
