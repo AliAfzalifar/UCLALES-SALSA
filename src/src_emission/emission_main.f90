@@ -108,8 +108,6 @@ MODULE emission_main
     INTEGER :: nprof
     INTEGER :: mb1,mb12,mb2,mb22,nc1,nc2
     REAL :: core(nbins), naero(1,1,nbins)
-    TYPE(EmitConfig), POINTER :: emd => NULL()
-    TYPE(EmitSizeDist), POINTER :: edt => NULL()
     !Ali, addition of emission type 3
     TYPE(EmitType3Config), POINTER :: emdT3 => NULL()
     REAl, ALLOCATABLE ::  x(:), y(:), z(:)
@@ -117,11 +115,9 @@ MODULE emission_main
 
     DO nprof = 1,nEmissionModes
 
-      !ASSOCIATE(emd => emitModes(nprof), edt => emitData(nprof))
+      ASSOCIATE(emd => emitModes(nprof), edt => emitData(nprof))
       
        ! Use pointers for individual emission configuration and data instances to clean up the code
-       emd => emitModes(nprof)
-       edt => emitData(nprof)
        IF (myid == 0) THEN
          WRITE(*,*) ''
          WRITE(*,*) '------------------------------------'
@@ -214,27 +210,13 @@ MODULE emission_main
                                  emdT3%t_in,emdT3%t_out,emdT3%t_trac,&
                                  emd%scS,emd%start_time,emd%end_time,x,y,z)
           END IF
-          ! Ali, addition of emission type 3
-
-          ! Ali, addition of emission type    
+          
           emdT3 => NULL()
           ! Ali, addition of emission type    
-          emd => NULL()
-          edt => NULL()
        
-          ! END ASSOCIATE
+        END ASSOCIATE
           
         END DO
-
-    ! Ali, addition of emission type 
-    ! IF (emd%emitType == 3)  emdT3 => NULL()
-    ! Ali, addition of emission type
-
-    ! Ali, addition of emission type    
-    !emdT3 => NULL()
-    ! Ali, addition of emission type    
-    !emd => NULL()
-    !edt => NULL()
 
     IF (myid == 0) THEN
     WRITE(*,*) '-------------------------------------'
@@ -382,24 +364,16 @@ MODULE emission_main
     REAL, INTENT(in) :: time_in   ! time in seconds
     LOGICAL :: condition
     INTEGER :: pr
-    TYPE(EmitConfig), POINTER :: emd
-    TYPE(EmitSizeDist), POINTER   :: edt
     !Ali, addition of emitType 3  
     TYPE(EmitType3Config), POINTER :: emdT3
     INTEGER :: conditionT3 = 0
-    !Ali, addition of emitType 3
 
-    emd => NULL()
-    edt => NULL()
-    !Ali, addition of emitType 3
     emdT3 => NULL()
     !Ali, addition of emitType 3  
     
     ! Loop over all specified emission profiles
     DO pr = 1,nEmissionModes
-      ! ASSOCIATE(emd => emitModes(pr), edt => emitData(pr))
-      emd => emitModes(pr)
-      edt => emitData(pr)
+      ASSOCIATE(emd => emitModes(pr), edt => emitData(pr))
       condition = getCondition(emd,time_in)
       IF (condition .AND. emd%emitType == 2) CALL custom_emission(edt,emd)
 
@@ -413,19 +387,12 @@ MODULE emission_main
       END IF
       !Ali, addition of emitType 3
          
-      ! END ASSOCIATE
-    emd => NULL()
-    edt => NULL()
+    END ASSOCIATE
     ! Ali, addition of emission type
     emdT3 => NULL()
     ! Ali, addition of emission type
       
     END DO
-   ! emd => NULL()
-   ! edt => NULL()
-   ! Ali, addition of emission type
-   ! emdT3 => NULL()
-   ! Ali, addition of emission type 
 
   END SUBROUTINE aerosol_emission
 
@@ -501,10 +468,12 @@ MODULE emission_main
     INTEGER :: k,i,j,bb,ss,mm
     CHARACTER(len=30) :: emit_spec
 
-    WRITE(*,*) '========================'
-    WRITE(*,*) 'CALCULATING EMISSIONS'
-    WRITE(*,*) '========================'
     
+    IF (myid == 0) THEN
+      WRITE(*,*) '========================'
+      WRITE(*,*) 'CALCULATING EMISSIONS'
+      WRITE(*,*) '========================'
+    END IF
 
     ASSOCIATE( k1 => emd%emitLevMin, k2 => emd%emitLevMax )
     
@@ -767,12 +736,6 @@ SUBROUTINE lagrangian_tracker(ix,iy,iz,t,np,t_in,t_out,t_trac,scS,start_time,end
       
     END IF
 
-   ! IF (myid == 3) THEN
-   !     PRINT*,'-1-1-1-1-1-1-1-1-1-1'
-   !     PRINT*,'x1',x1,'x2',x2,'y1',y1,'y2',y2,'d_x',d_x,'dx2x1',dx2x1,'d_y',d_y,'dy2y1',dy2y1
-   !     PRINT*,'-1-1-1-1-1-1-1-1-1-1'
-   !   END IF
-
     IF ((d_x*dx2x1 >= 0.).AND.(d_y*dy2y1 >= 0.).AND.(ANY([abs(dx2x1),abs(dy2y1),abs(dz2z1)] > eps))) THEN
     
       IF ((ABS(d_x) > eps) .AND. (ABS(d_y) < eps)) THEN
@@ -890,14 +853,6 @@ SUBROUTINE lagrangian_tracker(ix,iy,iz,t,np,t_in,t_out,t_trac,scS,start_time,end
         END IF
         
       END IF
-
-    !  IF (myid == 3) THEN
-    !    PRINT*,'00000000000000000000'
-    !    PRINT*,'i=',i,'j=',j,'ix(j)',ix(j),'iy(j)',iy(j), &
-    !        'x1=',x1,'x2=',x2,'y1=',y1,'y2=',y2,'t_trac=',t_trac,'min_t',min_t,&
-    !        'x_trac=',x_trac,'y_trac=',y_trac
-    !    PRINT*,'00000000000000000000'
-    !  END IF
      
       d  = sqrt(dx2x1**2 + dy2y1**2 + dz2z1**2)
       dt = d/scS
@@ -967,15 +922,6 @@ SUBROUTINE lagrangian_tracker(ix,iy,iz,t,np,t_in,t_out,t_trac,scS,start_time,end
             t(j+1) = t_trac
             t_trac_old = t_trac
 
-       !     IF (myid == 3) THEN
-       !       PRINT*,'11111111111111111111'
-       !       PRINT*,'i=', i,'j=', j,'ix(j+1)=',ix(j+1) ,'iy(j+1)=',iy(j+1),&
-       !           'ix(j)=',ix(j) ,'iy(j)=',iy(j), &
-       !         'y1=',y1,'y2=',y2,'dt=', dt,'dtx=',dtx,'dty=',dty,'min_t=', min_t,'sub_dt',sub_dt,&
-       !         'x1=', x1,'x2=',x2,'t_trac=',t_trac,'x_trac=',x_trac,'y_trac=',y_trac
-       !       PRINT*,'11111111111111111111'
-       !     END IF
-
           ELSE IF (min_t == dty) THEN
             IF (ABS(dtx-dty) < eps) THEN
               IF(vx > 0) ix(j+1) = ix(j) + 1
@@ -990,15 +936,6 @@ SUBROUTINE lagrangian_tracker(ix,iy,iz,t,np,t_in,t_out,t_trac,scS,start_time,end
             t(j+1) = t_trac
             t_trac_old = t_trac
 
-       !     IF (myid == 3) THEN
-       !       PRINT*,'22222222222222222222'
-       !       PRINT*,'i=', i,'j=', j,'ix(j+1)=',ix(j+1) ,'iy(j+1)=',iy(j+1),&
-       !           'ix(j)=',ix(j) ,'iy(j)=',iy(j), &
-       !         'y1=',y1,'y2=',y2,'dt=', dt,'dtx=',dtx,'dty=',dty,'min_t=', min_t,'sub_dt',sub_dt,&
-       !         'x1=', x1,'x2=',x2,'t_trac=',t_trac,'x_trac=',x_trac,'y_trac=',y_trac
-       !       PRINT*,'22222222222222222222'
-       !     END IF
-
         ELSE IF (min_t == dtz) THEN
             ix(j+1) = ix(j) 
             iy(j+1) = iy(j)
@@ -1006,18 +943,8 @@ SUBROUTINE lagrangian_tracker(ix,iy,iz,t,np,t_in,t_out,t_trac,scS,start_time,end
             IF (vz < 0)  iz(j+1) = iz(j) - 1
             t_trac = t_trac + min_t
             t(j+1) = t_trac
-            t_trac_old = t_trac
-            
-      !      IF (myid == 3) THEN
-      !        PRINT*,'33333333333333333333'
-      !        PRINT*,'i=', i,'j=', j,'ix(j+1)=',ix(j+1) ,'iy(j+1)=',iy(j+1),&
-      !            'ix(j)=',ix(j) ,'iy(j)=',iy(j), &
-      !            'y1=',y1,'y2=',y2,'dt=', dt,'dtx=',dtx,'dty=',dty,'min_t=', min_t,'sub_dt',sub_dt,&
-      !            'x1=', x1,'x2=',x2,'t_trac=',t_trac,'x_trac=',x_trac,'y_trac=',y_trac
-      !        PRINT*,'33333333333333333333'
-      !      END IF
-            
-          
+            t_trac_old = t_trac           
+
           ELSE IF (min_t == (dt-sub_dt)) THEN
             t_trac = t_trac + min_t
             t(j+1) = t_trac
@@ -1036,15 +963,6 @@ SUBROUTINE lagrangian_tracker(ix,iy,iz,t,np,t_in,t_out,t_trac,scS,start_time,end
             ELSE
             j = j - 1
           END IF
-          
-      !    IF (myid == 3) THEN
-      !      PRINT*,'44444444444444444444'
-      !      PRINT*,'i=', i,'j=', j,'ix(j+1)=',ix(j+1) ,'iy(j+1)=',iy(j+1),&
-      !            'ix(j)=',ix(j) ,'iy(j)=',iy(j), &
-      !            'y1=',y1,'y2=',y2,'dt=',dt,'dtx=',dtx,'dty=',dty,'min_t=',min_t,'sub_dt',sub_dt,&
-      !            'x1=',x1,'x2=',x2,'t_trac=',t_trac,'x_trac=',x_trac,'y_trac=',y_trac
-      !      PRINT*,'44444444444444444444'
-      !    END IF
             
         END IF
           x_trac = x_trac + vx * min_t
@@ -1110,12 +1028,12 @@ SUBROUTINE custom_emission_typ3(edt,emd,emdT3,time,conditionT3)
     INTEGER :: ind, i_str,i_end, di
     CHARACTER(len=30) :: emit_spec
 
-     
-     WRITE(*,*) '========================'
-     WRITE(*,*) 'CALCULATING EMISSIONS TYPE 3'
-     WRITE(*,*) '========================'
+     IF (myid == 0) THEN
+       WRITE(*,*) '========================'
+       WRITE(*,*) 'CALCULATING EMISSIONS TYPE 3'
+       WRITE(*,*) '========================'
+     END IF
   
-
     ASSOCIATE( ix => emdT3%ix, iy => emdT3%iy, iz => emdT3%iz, t => emdT3%t, np => emdT3%np, &
               t_trac => emdT3%t_trac,t_in => emdT3%t_in, t_out => emdT3%t_out)
       
@@ -1134,9 +1052,6 @@ SUBROUTINE custom_emission_typ3(edt,emd,emdT3,time,conditionT3)
         DO ss = 1,spec%getNSpec()
           mm = getMassIndex(nbins,bb,ss)
           a_maerot(iz(ind),ix(ind),iy(ind),mm) = a_maerot(iz(ind),ix(ind),iy(ind),mm) + edt%mass(mm) * dt
-          IF ((ix(ind)==5) .AND. (iy(ind)==5) .AND. (iz(ind)==28)) THEN
-            PRINT*, 'mm = ',mm, '(a_maerot(28,5,5,mm)) =', a_maerot(28,5,5,mm) 
-          END IF
         END DO
       END DO
     END DO
