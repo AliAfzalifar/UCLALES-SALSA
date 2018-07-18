@@ -13,22 +13,22 @@
 ###############################################################
 
 # -------------------------------------------------- <USER SPECIFIED INFORMATION>
-IsSeq=0 # 0 for mpi runs with CRAY, 1 for sequential, 2 for mpi on laptop
+IsSeq=1 # 0 for mpi runs with CRAY, 1 for sequential, 2 for mpi on laptop
 
-EXPNAME="DEV_em0"  # Name of the experiment
+EXPNAME="jung3rdAug"  # Name of the experiment
 
-NPROCS=144          # Number of processors (for IsSeq==0)
+NPROCS=2          # Number of processors (for IsSeq==0)
 TWALL=8:00:00      # Required wallclock time for batch system
 
-NXP=100               # Number of points in X-direction (including "halo" points)
-NYP=100              # Number of points in Y-direction (including "halo" points)
+NXP=40               # Number of points in X-direction (including "halo" points)
+NYP=5              # Number of points in Y-direction (including "halo" points)
 NZP=70              # Number of points in Z-direction
 DX=50.              # Resolution in X-direction (meters)
 DY=50.              # Resolution in Y-direction (meters)
 DZ=20.              # Resolution in Z-direction (meters)
 DT=1.               # (max) Timestep length (seconds)
 Tspinup=1800.        # Length of the spinup period (seconds)
-Texp=12000.         # Length of the experiment (seconds)
+Texp=43200.         # Length of the experiment (seconds)
 LEVEL=4             # Thermodynamic level ( 1-3 for bulk microphysics, 4- for SALSA )
 # -------------------------------------------------- </USER SPECIFIED INFORMATION>
 
@@ -77,10 +77,10 @@ cat > NAMELIST <<EOF
   prndtl = -0.3333333         !
   filprf = '${EXPNAME}'       ! Output filename profile
   hfilin = '${EXPNAME}.h.rst'
-  ssam_intvl = 120.           ! Interval for statistical output
-  savg_intvl = 120.           ! Averaging interval for stat output
-  frqanl = 600.                ! Interval for full domain output
-  lbinanl = .TRUE.           ! Write binned microphysical output (with level >= 4)
+  ssam_intvl = 60.           ! Interval for statistical output
+  savg_intvl = 60.           ! Averaging interval for stat output
+  frqanl = 30.                ! Interval for full domain output
+  lbinanl = .FALSE.           ! Write binned microphysical output (with level >= 4)
   salsa_b_bins = .TRUE.
   mcflg = .FALSE.             ! Do mass conservation statistics
   sed_aero = .FALSE.          ! Calculate sedimentation of aerosol particles
@@ -96,9 +96,9 @@ cat > NAMELIST <<EOF
   strtim = 215.5               ! Start time
   case_name = 'default'       ! Case name for large-scale forcing schemes
   div = 3.75e-6               ! Large-scale divergence
-  th00 = 289.                 ! Reference temperature
-  umean =  0.1                
-  vmean =  0.1
+  th00 = 288.                 ! Reference temperature
+  umean =  10.0                
+  vmean =  0.
  /
 
 &surface
@@ -131,7 +131,7 @@ cat > NAMELIST <<EOF
 
   ndg_theta%nudgetype = 1
   ndg_theta%tau_type = 2      ! Type of relaxation time (0:constant, 1-3: increasing)
-  ndg_theta%tau_min = 300.    ! Min relaxation time (with tau_type=1-3 and constant tau)
+  ndg_theta%tau_min = 60.    ! Min relaxation time (with tau_type=1-3 and constant tau)
   ndg_theta%tau_max = 3600.   ! Max relaxation time (with tau_type=1-3)
   ndg_theta%tau_max_continue = .TRUE.
 
@@ -140,49 +140,31 @@ cat > NAMELIST <<EOF
  ! With lemission = .TRUE. and level >= 4
  &emission
 
-  nEmissionModes = 3
+  nEmissionModes = 2
 
-  emitModes(1)%emitType = 3
+  emitModes(1)%emitType = 2
   emitModes(1)%regime = 2
-  emitModes(1)%start_time = 10900.
-  emitModes(1)%end_time = 11000.
+  emitModes(1)%start_time = 7200.
+  emitModes(1)%end_time = 7201.
   emitModes(1)%species = "SS"
   emitModes(1)%emitHeightMin = 600.
   emitModes(1)%emitHeightMax = 650.
   emitModes(1)%emitSizeDistType = 2
   emitModes(1)%emitDiam = 1.1e-6
-  emitModes(1)%emitNum = 0.5e6
+  emitModes(1)%emitNum = 0.5e4
   emitModes(1)%emitSigma = 1.5
-  emitModes(1)%emitMap = 'emitMap_1'
-  emitModes(1)%scS = 20.
 
-  emitModes(2)%emitType = 3
+  emitModes(2)%emitType = 2
   emitModes(2)%regime = 2
-  emitModes(2)%start_time = 10900.
-  emitModes(2)%end_time = 11000.
+  emitModes(2)%start_time = 7200.
+  emitModes(2)%end_time = 7201.
   emitModes(2)%species = "SS"
   emitModes(2)%emitHeightMin = 600.
   emitModes(2)%emitHeightMax = 650.
   emitModes(2)%emitSizeDistType = 2
   emitModes(2)%emitDiam = 4.0e-6
-  emitModes(2)%emitNum = 0.6e6
+  emitModes(2)%emitNum = 0.6e4
   emitModes(2)%emitSigma = 2.
-  emitModes(2)%emitMap = 'emitMap_1'
-  emitModes(2)%scS = 20.
-
-  emitModes(3)%emitType = 3
-  emitModes(3)%regime = 2
-  emitModes(3)%start_time = 10900.
-  emitModes(3)%end_time = 11000.
-  emitModes(3)%species = "SS"
-  emitModes(3)%emitHeightMin = 600.
-  emitModes(3)%emitHeightMax = 650.
-  emitModes(3)%emitSizeDistType = 2
-  emitModes(3)%emitDiam = 1.0e-7
-  emitModes(3)%emitNum = 1e6
-  emitModes(3)%emitSigma = 2.
-  emitModes(3)%emitMap = 'emitMap_1'
-  emitModes(3)%scS = 20.
 
  /
 
@@ -209,7 +191,7 @@ cat > NAMELIST <<EOF
    lscgpp = .TRUE.       ! Self-collection of rain drops
    lscgpc = .TRUE.       ! Rain collection of cloud droplets
    lscgaa = .FALSE.      ! Aerosol coagulation
-   lscgca = .FALSE.      ! Cloud collection of aerosols
+   lscgca = .TRUE.       ! Cloud collection of aerosols
    lscgpa = .TRUE.       ! Rain collection of aerosols
    lscgia = .TRUE.       ! Ice collection of aerosols
    lscgic = .TRUE.       ! Ice collection of cloud droplets
@@ -238,15 +220,15 @@ cat > NAMELIST <<EOF
    rhlim = 1.005          ! RH limit for SALSA during initialization and spinup
 
    isdtyp = 0
-   nspec = 2
-   listspec = 'SO4','SS','','','','',''
+   nspec = 1
+   listspec = 'SO4','','','','','',''
    volDistA = 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0   
    volDistB = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
    nf2a = 1.0
 
    sigmag = 1.2, 1.7, 2.0, 2.0, 2.0, 2.0, 2.0  ! Stdev for initial aerosol size distribution for isdtyp == 0 (uniform)  
    dpg = 0.022, 0.12, 0.2, 0.2, 0.2, 0.2, 0.2   ! Mode mean diameters in micrometers
-   n = 400., 200., 1., 0., 0., 0., 0.         ! Mode number concentrations in #/cm^3
+   n = 400., 400., 0., 0., 0., 0., 0.         ! Mode number concentrations in #/cm^3
  
  /
 
