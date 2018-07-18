@@ -15,7 +15,7 @@
 # -------------------------------------------------- <USER SPECIFIED INFORMATION>
 IsSeq=0 # 0 for mpi runs with CRAY, 1 for sequential, 2 for mpi on laptop
 
-EXPNAME="DEV_em0"  # Name of the experiment
+EXPNAME="myDEV_init"  # Name of the experiment
 
 NPROCS=144          # Number of processors (for IsSeq==0)
 TWALL=8:00:00      # Required wallclock time for batch system
@@ -28,7 +28,7 @@ DY=50.              # Resolution in Y-direction (meters)
 DZ=20.              # Resolution in Z-direction (meters)
 DT=1.               # (max) Timestep length (seconds)
 Tspinup=1800.        # Length of the spinup period (seconds)
-Texp=12000.         # Length of the experiment (seconds)
+Texp=10500.         # Length of the experiment (seconds)
 LEVEL=4             # Thermodynamic level ( 1-3 for bulk microphysics, 4- for SALSA )
 # -------------------------------------------------- </USER SPECIFIED INFORMATION>
 
@@ -80,6 +80,7 @@ cat > NAMELIST <<EOF
   ssam_intvl = 120.           ! Interval for statistical output
   savg_intvl = 120.           ! Averaging interval for stat output
   frqanl = 600.                ! Interval for full domain output
+  frqhis = 10500.             ! Interval for history file output
   lbinanl = .TRUE.           ! Write binned microphysical output (with level >= 4)
   salsa_b_bins = .TRUE.
   mcflg = .FALSE.             ! Do mass conservation statistics
@@ -145,7 +146,7 @@ cat > NAMELIST <<EOF
   emitModes(1)%emitType = 3
   emitModes(1)%regime = 2
   emitModes(1)%start_time = 10900.
-  emitModes(1)%end_time = 11000.
+  emitModes(1)%end_time = 110000.
   emitModes(1)%species = "SS"
   emitModes(1)%emitHeightMin = 600.
   emitModes(1)%emitHeightMax = 650.
@@ -159,7 +160,7 @@ cat > NAMELIST <<EOF
   emitModes(2)%emitType = 3
   emitModes(2)%regime = 2
   emitModes(2)%start_time = 10900.
-  emitModes(2)%end_time = 11000.
+  emitModes(2)%end_time = 110000.
   emitModes(2)%species = "SS"
   emitModes(2)%emitHeightMin = 600.
   emitModes(2)%emitHeightMax = 650.
@@ -173,7 +174,7 @@ cat > NAMELIST <<EOF
   emitModes(3)%emitType = 3
   emitModes(3)%regime = 2
   emitModes(3)%start_time = 10900.
-  emitModes(3)%end_time = 11000.
+  emitModes(3)%end_time = 110000.
   emitModes(3)%species = "SS"
   emitModes(3)%emitHeightMin = 600.
   emitModes(3)%emitHeightMax = 650.
