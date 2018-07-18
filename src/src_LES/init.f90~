@@ -121,8 +121,7 @@ CONTAINS
      !
      ! Initialize nudging profiles
      ! ----------------------------
-     !Ali, for history run parmeters of init_nudg are read from history file
-     IF ((runtype == 'INITIAL') .AND. (lnudging)) CALL init_nudg()
+     IF (lnudging) CALL init_nudg()
      !
      ! Initialize aerosol emissions
      ! -----------------------------

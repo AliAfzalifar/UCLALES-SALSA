@@ -1,6 +1,6 @@
 ###############################################################
 #
-# Llocation of code (in $ROOT) and location where model is to be built $BIN
+# Location of code (in $ROOT) and location where model is to be built $BIN
 #
 ROOT      :=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BIN       = $(ROOT)/bin
@@ -27,14 +27,14 @@ RANLIB =:
 SEQFFLAGS = -I$(SRC)
 MPIFFLAGS = -I$(SRC)
 MPI = /usr
-MPILIB = -L$(MPI)/lib -lmpich
-MPIINC = -I$(MPI)/include/mpich
+#MPILIB = -L$(MPI)/lib -lmpich
+#MPIINC = -I$(MPI)/include/mpich
 NCDF = /usr
 NCDFLIB = -L$(NCDF)/lib -lnetcdf -lnetcdff
 NCDFINC = -I$(NCDF)/include
 LIBS = '$(NCDFLIB) $(MPILIB)'
 F90 = gfortran
-MPIF90 = gfortran
+MPIF90 = mpif90
 FFLAGS = -O2 -fdefault-real-8 ${NCDFINC} $(MPIINC) -std=f2008 -fbounds-check  -g -fcheck=all   -fbacktrace -ffpe-trap=invalid,zero,overflow
 F77FLAGS = -O2 
 

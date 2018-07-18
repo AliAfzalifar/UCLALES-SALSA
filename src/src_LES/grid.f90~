@@ -22,7 +22,7 @@ MODULE grid
    USE ncio!, ONLY : open_nc, define_nc
    USE mo_submctl, ONLY : spec
 
-  
+
    IMPLICIT NONE
    
    CHARACTER(len=10), PARAMETER :: global_name = "grid"
@@ -107,8 +107,6 @@ MODULE grid
    REAL, POINTER :: a_npp(:,:,:),a_npt(:,:,:)
    REAL, POINTER :: a_qp(:,:,:),a_qt(:,:,:)
    REAL, POINTER :: a_sp(:,:,:),a_st(:,:,:)  !dont touch yet AZ
-
-   !REAL, ALLOCATABLE :: theta_ref(:), rv_ref(:), u_ref(:), v_ref(:), aero_ref(:,:), aero_target(:,:)
 
    ! Juha: SALSA tracers
    !---------------------------------------------------------------------------
@@ -1631,16 +1629,7 @@ CONTAINS
    !
    SUBROUTINE write_hist(htype, time)
 
-     USE mpi_interface, ONLY : appl_abort, myid, wrxid, wryid
-   
-     !Ali
-     !These are must be written and read from history file
-     !for consistent nudging initialization
-     USE nudg_defs, ONLY : theta_ref, rv_ref, u_ref, v_ref, aero_ref, &
-                           ndg_theta, ndg_rv, ndg_u, ndg_v, ndg_aero
-     USE mo_submctl, ONLY : nbins
-     !Ali
-     
+      USE mpi_interface, ONLY : appl_abort, myid, wrxid, wryid
       INTEGER :: errcode = -17
 
       INTEGER, INTENT (in) :: htype
@@ -1650,7 +1639,7 @@ CONTAINS
 
       CHARACTER (len=80) :: hname
 
-      INTEGER :: n, iblank, ii, jj, kk,nn
+      INTEGER :: n, iblank
       !
       ! create and open a new output file.
       !
@@ -1692,43 +1681,10 @@ CONTAINS
       WRITE(10) a_wc
 
       DO n = 1, nscl
-        CALL newsclr(n)
-        WRITE(10) a_sp
+         CALL newsclr(n)
+         WRITE(10) a_sp
       END DO
 
-      IF (ndg_theta%nudgetype > 0) THEN
-        DO n = 1, nzp
-          WRITE(10) theta_ref(n)
-        END DO  
-      END IF
-
-      IF (ndg_rv%nudgetype > 0) THEN
-        DO n = 1, nzp
-          WRITE(10) rv_ref(n)
-        END DO  
-      END IF
-
-      IF (ndg_u%nudgetype > 0) THEN
-        DO n = 1, nzp
-          WRITE(10) u_ref(n)
-        END DO  
-      END IF
-
-      IF (ndg_v%nudgetype > 0) THEN
-        DO n = 1, nzp
-          WRITE(10) v_ref(n)
-        END DO  
-      END IF
-
-      IF (level > 3 .AND. ndg_aero%nudgetype > 0) THEN
-        WRITE(10) nbins
-        DO n = 1, nzp
-          DO nn = 1, nbins
-            WRITE(10) aero_ref(n,nn)    
-          END DO
-        END DO
-      END IF
-    
       IF ( allocated(a_rv)   ) WRITE(10) a_rv
       IF ( allocated(a_rc)   ) WRITE(10) a_rc
       IF ( allocated(a_rflx) ) WRITE(10) a_rflx
@@ -1751,27 +1707,17 @@ CONTAINS
 
    SUBROUTINE read_hist(time, hfilin)
 
-     USE mpi_interface, ONLY : appl_abort, myid, wrxid, wryid
-     
-      !Ali
-      !These are must be written and read from history file
-      !for consistent nudging initialization
-      USE nudg_defs, ONLY : theta_ref, rv_ref, u_ref, v_ref, aero_ref, &
-                           ndg_theta, ndg_rv, ndg_u, ndg_v, ndg_aero
-      USE mo_submctl, ONLY : nbins
-      !Ali
-      
-      
+      USE mpi_interface, ONLY : appl_abort, myid, wrxid, wryid
+
       CHARACTER(len=80), INTENT(in) :: hfilin
       REAL, INTENT(out)             :: time
 
       CHARACTER(len=20), PARAMETER :: name = "read_hist"
 
       CHARACTER (len=80) :: hname
-      INTEGER :: n, nxpx, nypx, nzpx, nsclx, iradx, isgsx, lvlx, ii, jj, kk
+      INTEGER :: n, nxpx, nypx, nzpx, nsclx, iradx, isgsx, lvlx
       LOGICAL :: exans
       REAL    :: umx, vmx, thx
-      INTEGER :: nn, nnbins
       !
       ! open input file.
       !
@@ -1808,54 +1754,12 @@ CONTAINS
          READ(10) a_wc
 
          DO n = 1, nscl
-           CALL newsclr(n)
-           IF (n <= nsclx) THEN
-             READ(10) a_sp
-           END IF
+            CALL newsclr(n)
+            IF (n <= nsclx) READ(10) a_sp
          END DO
-
-         IF (ndg_theta%nudgetype > 0) THEN
-           ALLOCATE(theta_ref(nzp))
-           DO n = 1, nzp
-              READ(10) theta_ref(n)
-           END DO
-         END IF
-
-         IF (ndg_rv%nudgetype > 0) THEN
-           ALLOCATE(rv_ref(nzp))
-           DO n = 1, nzp
-              READ(10) rv_ref(n)
-           END DO
-         END IF
-
-         IF (ndg_u%nudgetype > 0) THEN
-           ALLOCATE(u_ref(nzp))
-           DO n = 1, nzp
-              READ(10) u_ref(n)
-           END DO
-         END IF
-
-         IF (ndg_v%nudgetype > 0) THEN
-           ALLOCATE(v_ref(nzp))
-           DO n = 1, nzp
-              READ(10) v_ref(n)
-           END DO
-         END IF
-
-         IF (level > 3 .AND. ndg_aero%nudgetype > 0) THEN
-           READ(10) nnbins
-           ALLOCATE(aero_ref(nzp,nnbins))
-           DO n = 1, nzp
-             DO nn = 1, nbins
-               READ(10) aero_ref(n,nn)    
-             END DO
-           END DO
-         END IF
-
-         
          DO n = nscl+1, nsclx
             READ(10)
-          END DO
+         END DO
 
          IF (lvlx > 0 .AND. lvlx < 4) THEN
             IF (level > 0 .AND. lvlx < 4) THEN
