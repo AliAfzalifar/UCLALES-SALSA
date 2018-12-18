@@ -60,6 +60,8 @@ MODULE emission_main
      ! Ali, addition of emission type 3
      CHARACTER(len=40):: emitMap = ''                 ! Name of the file providing all location of emission (only for emitType = 3)
      REAL             :: scS = -999.                  ! Source speed (m/s) (only for emitType = 3)
+     INTEGER          :: z_expan_up = 0               ! Epands the emission map to adjacent cells above the given map
+     INTEGER          :: z_expan_dw = 0               ! Epands the emission map to adjacent cells down the given map      
      ! Ali, addition of emission type 3
   END TYPE EmitConfig
 
@@ -1035,7 +1037,8 @@ SUBROUTINE custom_emission_typ3(edt,emd,emdT3,time,conditionT3)
      END IF
   
     ASSOCIATE( ix => emdT3%ix, iy => emdT3%iy, iz => emdT3%iz, t => emdT3%t, np => emdT3%np, &
-              t_trac => emdT3%t_trac,t_in => emdT3%t_in, t_out => emdT3%t_out)
+              t_trac => emdT3%t_trac,t_in => emdT3%t_in, t_out => emdT3%t_out, &
+              z_expan_up => emd%z_expan_up, z_expan_dw => emd%z_expan_dw)
       
     t_str = MAX(t_in(conditionT3), t_trac)
     t_end = MIN(t_out(conditionT3), (time + dtl) )  
@@ -1048,10 +1051,12 @@ SUBROUTINE custom_emission_typ3(edt,emd,emdT3,time,conditionT3)
       DO j = 1, di
         dt  = ( MIN(t_end, t(i_str+j)) - MAX(t_str, t(i_str+j-1)) )/dtl
         ind = i_str+j-1
-        a_naerot(iz(ind),ix(ind),iy(ind),bb) = a_naerot(iz(ind),ix(ind),iy(ind),bb) + edt%numc(bb) * dt
+        a_naerot((iz(ind)-z_expan_dw):(iz(ind)+z_expan_up),ix(ind),iy(ind),bb) = &
+                       a_naerot((iz(ind)-z_expan_dw):(iz(ind)+z_expan_up),ix(ind),iy(ind),bb) + edt%numc(bb) * dt
         DO ss = 1,spec%getNSpec()
           mm = getMassIndex(nbins,bb,ss)
-          a_maerot(iz(ind),ix(ind),iy(ind),mm) = a_maerot(iz(ind),ix(ind),iy(ind),mm) + edt%mass(mm) * dt
+          a_maerot((iz(ind)-z_expan_dw):(iz(ind)+z_expan_up),ix(ind),iy(ind),mm) = &
+                     a_maerot((iz(ind)-z_expan_dw):(iz(ind)+z_expan_up),ix(ind),iy(ind),mm) + edt%mass(mm) * dt
         END DO
       END DO
     END DO
